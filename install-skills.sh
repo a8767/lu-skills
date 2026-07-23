@@ -30,12 +30,15 @@ err()   { echo "${C_RED}[✗]${C_RST} $*"; }
 
 MODE="merge"          # merge | replace
 INSTALL_DEPS=0
+DO_RESTART=0
 ARCHIVE=""
 
 for a in "$@"; do
   case "$a" in
-    --replace) MODE="replace" ;;
-    --deps)    INSTALL_DEPS=1 ;;
+    --replace)   MODE="replace" ;;
+    --deps)      INSTALL_DEPS=1 ;;
+    --restart)   DO_RESTART=1 ;;
+    --no-restart) DO_RESTART=0 ;;
     -h|--help) sed -n '3,18p' "$0"; exit 0 ;;
     *) ARCHIVE="$a" ;;
   esac
@@ -133,6 +136,27 @@ echo
 ok "技能安装完成！"
 info "下一步：重启 WorkBuddy，技能即可在对话中使用。"
 warn "注意：联网类技能若需各自的 API Key，请在对应 config.json 中补充。"
+
+# ---------- 自动重启 WorkBuddy(默认关闭，需 --restart) ----------
+if [ "$DO_RESTART" -eq 1 ]; then
+  info "尝试重启 WorkBuddy ..."
+  PROC=""
+  if command -v pgrep >/dev/null 2>&1; then
+    PROC="$(pgrep -f -i 'workbuddy' | head -1)"
+  fi
+  if [ -n "$PROC" ]; then
+    EXE="$(ps -p "$PROC" -o comm= 2>/dev/null || true)"
+    kill "$PROC" 2>/dev/null && sleep 2
+    if [ -n "$EXE" ] && command -v "$EXE" >/dev/null 2>&1; then
+      nohup "$EXE" >/dev/null 2>&1 &
+      ok "已重启 WorkBuddy"
+    else
+      warn "找不到可执行路径，请手动启动 WorkBuddy"
+    fi
+  else
+    warn "未检测到运行中的 WorkBuddy，请手动启动"
+  fi
+fi
 
 # 清理临时解压目录
 [ -n "${TMP:-}" ] && rm -rf "$TMP"

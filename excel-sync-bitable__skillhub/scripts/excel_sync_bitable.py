@@ -1,614 +1,448 @@
 #!/usr/bin/env python3
-import os
-import sys
+"""Safe Excel/CSV <-> Feishu Base synchronizer for lark-cli 1.x."""
+from __future__ import print_function
+
 import argparse
-import pandas as pd
-import subprocess
-from datetime import datetime
 import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+try:
+    from urllib.parse import parse_qs, urlparse
+except ImportError:  # Python 2 compatibility is harmless for old embedded runtimes.
+    from urlparse import parse_qs, urlparse
+
+import pandas as pd
+
+
+WRITABLE_TYPES = set(["text", "number", "date", "datetime", "checkbox", "bool"])
+
+
+class MissingFieldsConfirmation(Exception):
+    """Signal a safe, user-actionable preflight result instead of a write."""
+
+
+def lark_cli_executable():
+    configured = os.environ.get("LARK_CLI_BIN")
+    if configured:
+        return configured
+    if os.name == "nt":
+        command = shutil.which("lark-cli.cmd")
+        if command:
+            return command
+    return shutil.which("lark-cli") or "lark-cli"
+
+
+def lark_cli_command(args):
+    """Avoid cmd.exe reparsing URL query strings and JSON on Windows."""
+    executable = lark_cli_executable()
+    if os.name == "nt" and executable.lower().endswith(".cmd"):
+        runner = os.path.join(os.path.dirname(executable), "node_modules", "@larksuite", "cli", "scripts", "run.js")
+        node = shutil.which("node")
+        if node and os.path.isfile(runner):
+            return [node, runner] + args
+    return [executable] + args
+
+
+def cli_json(args):
+    """Run lark-cli and return its JSON response, with actionable failures."""
+    command = lark_cli_command(args + ["--as", "user", "--format", "json"])
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+    if result.returncode:
+        raise RuntimeError("lark-cli failed: {0}".format(result.stderr.strip() or result.stdout.strip()))
+    try:
+        return json.loads(result.stdout)
+    except ValueError:
+        raise RuntimeError("lark-cli did not return JSON: {0}".format(result.stdout[:500]))
+
+
+def walk_values(value, key):
+    if isinstance(value, dict):
+        if key in value and value[key]:
+            yield value[key]
+        for item in value.values():
+            for found in walk_values(item, key):
+                yield found
+    elif isinstance(value, list):
+        for item in value:
+            for found in walk_values(item, key):
+                yield found
+
+
+def first_value(value, *keys):
+    for key in keys:
+        found = list(walk_values(value, key))
+        if found:
+            return found[0]
+    return None
+
+
+def read_frame(path):
+    if not os.path.isfile(path):
+        raise FileNotFoundError("input file not found: {0}".format(path))
+    suffix = os.path.splitext(path)[1].lower()
+    if suffix == ".csv":
+        frame = pd.read_csv(path)
+    elif suffix in (".xlsx", ".xlsm", ".xls"):
+        frame = pd.read_excel(path)
+    else:
+        raise ValueError("only .csv, .xlsx, .xlsm and .xls are supported")
+    if frame.empty:
+        raise ValueError("input file has no data rows")
+    frame.columns = [str(column).strip() for column in frame.columns]
+    if len(set(frame.columns)) != len(frame.columns) or any(not column for column in frame.columns):
+        raise ValueError("column names must be non-empty and unique")
+    return frame
+
+
+def normalize_value(value):
+    if pd.isna(value):
+        return None
+    if isinstance(value, pd.Timestamp):
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    return str(value)
+
+
+def frame_records(frame):
+    return [{column: normalize_value(row[column]) for column in frame.columns} for _, row in frame.iterrows()]
+
+
+def ensure_unique_keys(records, key, label):
+    values = []
+    for index, record in enumerate(records, 1):
+        value = record.get(key)
+        if value is None or str(value).strip() == "":
+            raise ValueError("{0} row {1} has a blank key: {2}".format(label, index, key))
+        values.append(key_token(value))
+    duplicates = sorted(set(value for value in values if values.count(value) > 1))
+    if duplicates:
+        raise ValueError("{0} has duplicate keys: {1}".format(label, ", ".join(duplicates[:10])))
+
+
+def key_token(value):
+    """Preserve matching semantics for Excel's integer-like numeric keys."""
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value).strip()
+
+
+def resolve_base(url):
+    response = cli_json(["base", "+url-resolve", "--url", url])
+    base_token = first_value(response, "base_token")
+    table_id = first_value(response, "table_id")
+    if not table_id:
+        table_id = parse_qs(urlparse(url).query).get("table", [None])[0]
+    if not base_token:
+        raise RuntimeError("could not resolve base_token from the supplied URL")
+    return base_token, table_id
+
+
+def records_from_response(response):
+    data = response.get("data", {}) if isinstance(response, dict) else {}
+    matrix = data.get("data")
+    fields = data.get("fields")
+    record_ids = data.get("record_id_list")
+    if isinstance(matrix, list) and isinstance(fields, list) and isinstance(record_ids, list):
+        if not (len(matrix) == len(record_ids)):
+            raise RuntimeError("record-list response has mismatched data and record_id_list lengths")
+        return [{"record_id": record_id, "fields": dict(zip(fields, row))}
+                for record_id, row in zip(record_ids, matrix)]
+    candidates = []
+    for key in ("items", "records"):
+        candidates.extend(list(walk_values(response, key)))
+    for candidate in candidates:
+        if isinstance(candidate, list) and all(isinstance(item, dict) for item in candidate):
+            if not candidate or any("record_id" in item or "fields" in item for item in candidate):
+                return candidate
+    return []
+
+
+def list_records(base_token, table_id, key=None):
+    offset, result = 0, []
+    while True:
+        args = ["base", "+record-list", "--base-token", base_token, "--table-id", table_id,
+                "--limit", "200", "--offset", str(offset)]
+        if key:
+            args.extend(["--field-id", key])
+        response = cli_json(args)
+        page = records_from_response(response)
+        result.extend(page)
+        has_more = bool(first_value(response, "has_more"))
+        if not has_more:
+            return result
+        if not page:
+            raise RuntimeError("record list indicated another page but returned no records")
+        offset += len(page)
+
+
+def field_items(response):
+    data = response.get("data", {}) if isinstance(response, dict) else {}
+    direct_fields = data.get("fields")
+    if isinstance(direct_fields, list) and all(isinstance(field, dict) for field in direct_fields):
+        return direct_fields
+    for item in walk_values(response, "items"):
+        if isinstance(item, list) and all(isinstance(entry, dict) for entry in item):
+            if not item or "field_name" in item[0] or "type" in item[0]:
+                return item
+    return []
+
+
+def target_field_map(base_token, table_id):
+    fields = field_items(cli_json(["base", "+field-list", "--base-token", base_token, "--table-id", table_id]))
+    return {str(field.get("field_name") or field.get("name")): field for field in fields}
+
 
 def infer_field_type(series):
-    """自动推断字段类型"""
-    # 检查是否全为空值
-    if series.dropna().empty:
-        return 'text'  # 空值列默认为文本类型
-    
-    dtype = str(series.dtype)
-    if 'int' in dtype or 'float' in dtype:
-        # 检查是否实际为空值列（dtype为float64但全为NaN）
-        if series.isna().all():
-            return 'text'
-        return 'number'
-    elif 'datetime' in dtype:
-        return 'datetime'
-    else:
-        # 尝试判断是否为日期字符串（抽样更多行提高准确性）
-        sample_size = min(100, len(series.dropna()))
-        if sample_size > 0:
-            try:
-                sample = series.dropna().sample(sample_size, random_state=42)
-                pd.to_datetime(sample)
-                return 'datetime'
-            except:
-                pass
-        return 'text'
+    values = [value for value in series.tolist() if not pd.isna(value)]
+    if not values:
+        return "text"
+    if pd.api.types.is_bool_dtype(series):
+        return "checkbox"
+    if pd.api.types.is_numeric_dtype(series):
+        return "number"
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return "datetime"
+    text_values = [str(value).strip().lower() for value in values]
+    boolean_values = set(["true", "false", "yes", "no", "y", "n", "1", "0", "是", "否"])
+    if all(value in boolean_values for value in text_values):
+        return "checkbox"
+    date_pattern = r"^\d{4}([-/.年])\d{1,2}([-/.月])\d{1,2}(日)?([ T]\d{1,2}:\d{2}(:\d{2})?)?$"
+    if all(pd.notna(pd.to_datetime(value, errors="coerce")) for value in text_values) and all(re.match(date_pattern, value) for value in text_values):
+        return "datetime"
+    numeric_pattern = r"^-?(0|[1-9]\d*)(\.\d+)?$"
+    if all(re.match(numeric_pattern, value) for value in text_values):
+        return "number"
+    return "text"
 
-def check_lark_cli():
-    """检查 lark-cli 是否已安装"""
-    try:
-        result = subprocess.run(['lark-cli', '--version'], capture_output=True, text=True)
-        if result.returncode == 0:
+
+def missing_field_specs(frame, field_map):
+    return [{"name": column, "type": infer_field_type(frame[column])}
+            for column in frame.columns if column not in field_map]
+
+
+def assert_writable_fields(field_map, columns):
+    bad = []
+    for column in columns:
+        field_type = str(field_map[column].get("type", "")).lower()
+        if field_type and field_type not in WRITABLE_TYPES:
+            bad.append("{0} ({1})".format(column, field_type))
+    if bad:
+        raise ValueError("unsupported or read-only target fields: {0}".format(", ".join(bad)))
+
+
+def create_fields(base_token, table_id, specs):
+    for spec in specs:
+        cli_json(["base", "+field-create", "--base-token", base_token, "--table-id", table_id,
+                  "--json", json.dumps(spec, ensure_ascii=False)])
+        print("Created missing field: {0} ({1})".format(spec["name"], spec["type"]))
+
+
+def adapt_value(value, field_type, column, row_number):
+    if value is None or pd.isna(value):
+        return None
+    field_type = str(field_type).lower()
+    if field_type in ("text", "date"):
+        return str(value)
+    if field_type == "number":
+        try:
+            return float(str(value).replace(",", ""))
+        except (TypeError, ValueError):
+            raise ValueError("row {0}, field {1} cannot be converted to number: {2}".format(row_number, column, value))
+    if field_type == "datetime":
+        parsed = pd.to_datetime(value, errors="coerce")
+        if pd.isna(parsed):
+            raise ValueError("row {0}, field {1} cannot be converted to datetime: {2}".format(row_number, column, value))
+        return parsed.strftime("%Y-%m-%d %H:%M:%S")
+    if field_type in ("checkbox", "bool"):
+        if isinstance(value, bool):
+            return value
+        text = str(value).strip().lower()
+        if text in ("true", "yes", "y", "1", "是"):
             return True
-    except FileNotFoundError:
-        pass
-    
-    print("❌ 错误：未安装 lark-cli（飞书CLI）")
-    print("\n📥 安装步骤：")
-    print("  1. 确保已安装 Node.js 16.0+")
-    print("  2. 运行：npm install -g @larksuite/cli")
-    print("  3. 初始化：lark-cli config init")
-    print("\n📖 详细文档：https://github.com/larksuite/cli")
-    sys.exit(1)
+        if text in ("false", "no", "n", "0", "否"):
+            return False
+        raise ValueError("row {0}, field {1} cannot be converted to checkbox: {2}".format(row_number, column, value))
+    raise ValueError("field {0} has unsupported type: {1}".format(column, field_type))
 
-def convert_excel_to_csv(excel_path, output_csv_path):
-    """将Excel转换为符合lark-cli要求的CSV格式"""
-    # 检查文件是否存在
-    if not os.path.exists(excel_path):
-        raise FileNotFoundError(f"❌ 文件不存在: {excel_path}")
-    
-    # 读取Excel
-    try:
-        df = pd.read_excel(excel_path)
-    except Exception as e:
-        raise Exception(f"❌ 读取Excel文件失败: {str(e)}")
-    
-    # 推断每个字段的类型
-    field_types = {}
-    for col in df.columns:
-        field_types[col] = infer_field_type(df[col])
-    
-    # 处理日期格式
-    for col, typ in field_types.items():
-        if typ == 'datetime':
-            df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%dT%H:%M:%S+08:00')
-    
-    # 生成带类型的表头
-    new_columns = [f"{col}:{field_types[col]}" for col in df.columns]
-    df.columns = new_columns
-    
-    # 保存为CSV
-    df.to_csv(output_csv_path, index=False, encoding='utf-8')
-    print(f"✅ 已生成CSV文件: {output_csv_path}")
-    print(f"📋 字段类型推断结果: {field_types}")
-    return field_types
 
-def create_new_bitable(csv_path, app_name, table_name):
-    """创建新的多维表格"""
-    cmd = [
-        'lark-cli', 'create',
-        '--csv',
-        '--from', csv_path,
-        '--app-name', app_name,
-        '--table-name', table_name
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode == 0:
-        print("✅ 新多维表格创建成功！")
-        print(result.stdout)
-    else:
-        print("❌ 创建失败:")
-        print(result.stderr)
-        sys.exit(1)
+def adapt_records(frame, field_map):
+    records = []
+    for row_number, (_, row) in enumerate(frame.iterrows(), 2):
+        record = {}
+        for column in frame.columns:
+            field_type = field_map[column].get("type", "text")
+            record[column] = adapt_value(row[column], field_type, column, row_number)
+        records.append(record)
+    return records
 
-def sync_to_existing_bitable(csv_path, base_url, table_name, key_field, create_missing=True):
-    """同步到现有多维表格"""
-    cmd = [
-        'lark-cli', 'sync',
-        '--csv',
-        '--from', csv_path,
-        '--url', base_url,
-        '--table-name', table_name,
-        '--key', key_field
-    ]
-    if create_missing:
-        cmd.append('--create-missing')
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode == 0:
-        print("✅ 数据同步成功！")
-        print(result.stdout)
-    else:
-        print("❌ 同步失败:")
-        print(result.stderr)
-        sys.exit(1)
 
-def extract_token_from_url(url):
-    """从URL中提取token信息，支持多维表格和电子表格"""
-    import re
-    
-    token_info = {
-        'type': None,  # 'bitable' 或 'sheet'
-        'token': None,
-        'table_id': None,
-        'sheet_id': None
-    }
-    
-    # 尝试匹配 /base/TOKEN
-    base_match = re.search(r'/base/([a-zA-Z0-9]+)', url)
-    if base_match:
-        token_info['type'] = 'bitable'
-        token_info['token'] = base_match.group(1)
-    
-    # 尝试匹配 /sheets/TOKEN
-    sheet_match = re.search(r'/sheets/([a-zA-Z0-9]+)', url)
-    if sheet_match:
-        token_info['type'] = 'sheet'
-        token_info['token'] = sheet_match.group(1)
-    
-    # 尝试匹配 /wiki/TOKEN
-    wiki_match = re.search(r'/wiki/([a-zA-Z0-9]+)', url)
-    if wiki_match:
-        wiki_token = wiki_match.group(1)
-        cmd = ['lark-cli', 'wiki', 'spaces', 'get_node', '--params', json.dumps({"token": wiki_token})]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            try:
-                data = json.loads(result.stdout)
-                if data.get('code') == 0:
-                    node = data.get('data', {}).get('node', {})
-                    obj_type = node.get('obj_type')
-                    token_info['token'] = node.get('obj_token')
-                    if obj_type == 'bitable':
-                        token_info['type'] = 'bitable'
-                    elif obj_type == 'sheet':
-                        token_info['type'] = 'sheet'
-            except:
-                pass
-    
-    # 尝试匹配 table=TABLE_ID 或 sheet=SHEET_ID
-    table_match = re.search(r'table=([a-zA-Z0-9]+)', url)
-    if table_match:
-        token_info['table_id'] = table_match.group(1)
-    
-    sheet_id_match = re.search(r'sheet=([a-zA-Z0-9]+)', url)
-    if sheet_id_match:
-        token_info['sheet_id'] = sheet_id_match.group(1)
-    
-    return token_info
-
-def extract_base_token_from_url(url):
-    """从URL中提取base_token和table_id（兼容旧版）"""
-    token_info = extract_token_from_url(url)
-    if token_info['type'] == 'bitable':
-        return token_info['token'], token_info['table_id']
-    return None, None
-
-def export_from_spreadsheet(url, sheet_names, output_path, no_record_id=False):
-    """从电子表格导出数据"""
-    print(f"📤 正在导出电子表格数据...")
-    print(f"📋 工作表: {', '.join(sheet_names) if sheet_names else '全部'}")
-    
-    # 提取token
-    token_info = extract_token_from_url(url)
-    spreadsheet_token = token_info['token']
-    
-    if not spreadsheet_token or token_info['type'] != 'sheet':
-        print("❌ 无法从URL中提取电子表格token")
-        sys.exit(1)
-    
-    print(f"📦 Spreadsheet Token: {spreadsheet_token}")
-    
-    # 获取工作表列表
-    cmd = ['lark-cli', 'sheets', '+info', '--spreadsheet-token', spreadsheet_token]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print("❌ 获取工作表列表失败:")
-        print(result.stderr)
-        sys.exit(1)
-    
-    try:
-        sheet_data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        print("❌ 解析工作表信息失败")
-        sys.exit(1)
-    
-    sheets = sheet_data.get('data', {}).get('sheets', {}).get('sheets', [])
-    sheet_map = {s['title']: s['sheet_id'] for s in sheets if s.get('resource_type') == 'sheet'}
-    
-    # 如果没有指定工作表，导出所有
-    if not sheet_names:
-        sheet_names = list(sheet_map.keys())
-    
-    # 导出数据
-    dfs = []
-    for sheet_name in sheet_names:
-        sheet_id = sheet_map.get(sheet_name)
-        if not sheet_id:
-            print(f"⚠️ 未找到工作表: {sheet_name}")
+def remote_key_map(records, key):
+    mapping = {}
+    for record in records:
+        fields = record.get("fields", record)
+        value = fields.get(key)
+        if isinstance(value, list):
+            value = ",".join(str(part) for part in value)
+        if value is None or str(value).strip() == "":
             continue
-        
-        # 动态获取工作表行列范围
-        sheet_info = next((s for s in sheets if s['sheet_id'] == sheet_id), None)
-        if sheet_info and 'grid_properties' in sheet_info:
-            grid = sheet_info['grid_properties']
-            max_row = grid.get('row_count', 1000)
-            max_col = grid.get('column_count', 26)
-            # 列号转换为字母（A, B, ..., Z, AA, AB, ...）
-            def col_to_letter(n):
-                result = ''
-                while n > 0:
-                    n, remainder = divmod(n - 1, 26)
-                    result = chr(65 + remainder) + result
-                return result
-            col_letter = col_to_letter(max_col)
-            range_str = f'{sheet_id}!A1:{col_letter}{max_row}'
+        value = key_token(value)
+        record_id = record.get("record_id")
+        if not record_id:
+            raise RuntimeError("record-list response did not include record_id")
+        if value in mapping:
+            raise ValueError("target table has duplicate key: {0}".format(value))
+        mapping[value] = record_id
+    return mapping
+
+
+def chunk(values, size):
+    for start in range(0, len(values), size):
+        yield values[start:start + size]
+
+
+def apply_sync(base_token, table_id, records, key, target_keys):
+    creates = [record for record in records if key_token(record[key]) not in target_keys]
+    updates = [record for record in records if key_token(record[key]) in target_keys]
+    for batch in chunk(creates, 200):
+        columns = list(batch[0].keys())
+        cli_json(["base", "+record-batch-create", "--base-token", base_token, "--table-id", table_id,
+                  "--json", json.dumps({"fields": columns, "rows": [[record[column] for column in columns] for record in batch]}, ensure_ascii=False)])
+    for record in updates:
+        cli_json(["base", "+record-upsert", "--base-token", base_token, "--table-id", table_id,
+                  "--record-id", target_keys[key_token(record[key])], "--json", json.dumps(record, ensure_ascii=False)])
+    return len(creates), len(updates)
+
+
+def verify_keys(base_token, table_id, key, expected):
+    actual = remote_key_map(list_records(base_token, table_id, key), key)
+    missing = sorted(set(key_token(value) for value in expected) - set(actual))
+    if missing:
+        raise RuntimeError("write verification failed; missing keys: {0}".format(", ".join(missing[:10])))
+
+
+def create_base(frame, app_name, table_name, apply):
+    schema = [{"name": column, "type": infer_field_type(frame[column])} for column in frame.columns]
+    print("Create preview: Base={0}, table={1}, fields={2}, rows={3}".format(app_name, table_name, len(schema), len(frame)))
+    if not apply:
+        print("Preview only. Re-run with --apply to create the Base and write rows.")
+        return
+    response = cli_json(["base", "+base-create", "--name", app_name, "--table-name", table_name,
+                         "--fields", json.dumps(schema, ensure_ascii=False), "--time-zone", "Asia/Shanghai"])
+    base_token = first_value(response, "base_token", "token")
+    table_id = first_value(response, "table_id")
+    if not base_token or not table_id:
+        raise RuntimeError("Base creation response did not include base_token and table_id")
+    records = adapt_records(frame, {spec["name"]: spec for spec in schema})
+    for batch in chunk(records, 200):
+        columns = list(frame.columns)
+        cli_json(["base", "+record-batch-create", "--base-token", base_token, "--table-id", table_id,
+                  "--json", json.dumps({"fields": columns, "rows": [[record[column] for column in columns] for record in batch]}, ensure_ascii=False)])
+    print("Created Base: {0}; table: {1}; inserted rows: {2}".format(base_token, table_id, len(records)))
+
+
+def sync(frame, url, key, apply, missing_fields_mode):
+    if key not in frame.columns:
+        raise ValueError("key column not found in source: {0}".format(key))
+    base_token, table_id = resolve_base(url)
+    if not table_id:
+        raise ValueError("URL must identify one target table (include ?table=tbl...)" )
+    field_map = target_field_map(base_token, table_id)
+    missing_specs = missing_field_specs(frame, field_map)
+    missing_names = [spec["name"] for spec in missing_specs]
+    if missing_specs:
+        summary = ", ".join("{0} ({1})".format(spec["name"], spec["type"]) for spec in missing_specs)
+        if missing_fields_mode == "prompt":
+            print("Missing target fields: {0}".format(summary))
+            print("No data was written. Re-run with --missing-fields skip to ignore them, or --missing-fields create --apply to create them before importing.")
+            return
+        if missing_fields_mode == "skip":
+            if key in missing_names:
+                raise ValueError("cannot skip the key field: {0}".format(key))
+            print("Skipping missing target fields: {0}".format(summary))
+            frame = frame[[column for column in frame.columns if column not in missing_names]]
+        elif apply:
+            create_fields(base_token, table_id, missing_specs)
+            field_map = target_field_map(base_token, table_id)
         else:
-            range_str = f'{sheet_id}!A1:Z1000'
-        
-        cmd = ['lark-cli', 'sheets', '+read', '--spreadsheet-token', spreadsheet_token, '--range', range_str]
-        read_result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if read_result.returncode != 0:
-            print(f"⚠️ 读取工作表失败: {sheet_name}")
-            continue
-        
-        try:
-            read_data = json.loads(read_result.stdout)
-            values = read_data.get('data', {}).get('valueRange', {}).get('values', [])
-            
-            if not values:
-                print(f"⚠️ 工作表 [{sheet_name}] 没有数据")
-                continue
-            
-            # 处理富文本格式的单元格
-            processed_values = []
-            for row in values:
-                processed_row = []
-                for cell in row:
-                    if cell is None:
-                        processed_row.append('')
-                    elif isinstance(cell, list):
-                        # 富文本格式，提取纯文本
-                        text = ''.join([seg.get('text', '') for seg in cell if isinstance(seg, dict)])
-                        processed_row.append(text)
-                    else:
-                        processed_row.append(cell)
-                processed_values.append(processed_row)
-            
-            # 转换为DataFrame
-            if len(processed_values) > 1:
-                df = pd.DataFrame(processed_values[1:], columns=processed_values[0])
-            else:
-                df = pd.DataFrame(processed_values)
-            
-            dfs.append({
-                'name': sheet_name,
-                'data': df
-            })
-            print(f"✅ 已获取工作表 [{sheet_name}]: {len(df)} 行")
-        except Exception as e:
-            print(f"⚠️ 解析数据失败: {sheet_name}: {str(e)}")
-            continue
-    
-    if not dfs:
-        print("❌ 没有数据可导出")
-        sys.exit(1)
-    
-    print("✅ 数据导出成功！")
-    return {'tables': [{'meta': {'tableName': d['name']}, 'rows': d['data'].to_dict('records')} for d in dfs]}
+            print("Will create missing target fields on apply: {0}".format(summary))
+            for spec in missing_specs:
+                field_map[spec["name"]] = spec
+    assert_writable_fields(field_map, list(frame.columns))
+    records = adapt_records(frame, field_map)
+    ensure_unique_keys(records, key, "source")
+    target_keys = remote_key_map(list_records(base_token, table_id, key), key)
+    create_count = sum(1 for record in records if key_token(record[key]) not in target_keys)
+    update_count = len(records) - create_count
+    print("Sync preview: target={0}/{1}; source={2}; create={3}; update={4}; remote rows={5}".format(base_token, table_id, len(records), create_count, update_count, len(target_keys)))
+    if not apply:
+        print("Preview only. Re-run with --apply after confirming these counts.")
+        return
+    created, updated = apply_sync(base_token, table_id, records, key, target_keys)
+    verify_keys(base_token, table_id, key, [record[key] for record in records])
+    print("Sync complete and verified: created={0}, updated={1}".format(created, updated))
 
-def export_from_bitable(base_url, table_names, output_path, no_record_id=False):
-    """从多维表格导出数据（使用新版lark-cli命令）"""
-    print(f"📤 正在导出多维表格数据...")
-    print(f"📋 表名: {', '.join(table_names)}")
-    
-    # 提取base_token
-    base_token, table_id = extract_base_token_from_url(base_url)
-    
-    if not base_token:
-        print("❌ 无法从URL中提取base_token")
-        sys.exit(1)
-    
-    print(f"📦 Base Token: {base_token}")
-    
-    # 获取表列表
-    cmd = ['lark-cli', 'base', '+table-list', '--base-token', base_token]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print("❌ 获取表列表失败:")
-        print(result.stderr)
-        sys.exit(1)
-    
-    try:
-        table_data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        print("❌ 解析表列表失败")
-        sys.exit(1)
-    
-    tables = table_data.get('data', {}).get('items', [])
-    table_id_map = {t['table_name']: t['table_id'] for t in tables}
-    
-    # 导出数据
-    dfs = []
-    for table_name in table_names:
-        tid = table_id_map.get(table_name) or table_id
-        if not tid:
-            print(f"⚠️ 未找到表: {table_name}")
-            continue
-        
-        # 获取字段列表
-        cmd = ['lark-cli', 'base', '+field-list', '--base-token', base_token, '--table-id', tid]
-        field_result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if field_result.returncode != 0:
-            print(f"⚠️ 获取字段列表失败: {table_name}")
-            continue
-        
-        try:
-            field_data = json.loads(field_result.stdout)
-            fields = field_data.get('data', {}).get('items', [])
-            field_names = [f['field_name'] for f in fields]
-        except:
-            field_names = []
-        
-        # 获取记录列表
-        cmd = ['lark-cli', 'base', '+record-list', '--base-token', base_token, '--table-id', tid]
-        record_result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if record_result.returncode != 0:
-            print(f"⚠️ 获取记录失败: {table_name}")
-            continue
-        
-        try:
-            record_data = json.loads(record_result.stdout)
-            rows = record_data.get('data', {}).get('data', [])
-            fields_from_response = record_data.get('data', {}).get('fields', field_names)
-            
-            # 转换为DataFrame
-            df = pd.DataFrame(rows, columns=fields_from_response)
-            
-            # 删除_record_id列（如果存在）
-            if '_record_id' in df.columns:
-                df = df.drop(columns=['_record_id'])
-            if no_record_id and 'record_id' in df.columns:
-                df = df.drop(columns=['record_id'])
-            
-            dfs.append({
-                'name': table_name,
-                'data': df
-            })
-            print(f"✅ 已获取表 [{table_name}]: {len(df)} 行")
-        except Exception as e:
-            print(f"⚠️ 解析数据失败: {table_name}: {str(e)}")
-            continue
-    
-    if not dfs:
-        print("❌ 没有数据可导出")
-        sys.exit(1)
-    
-    print("✅ 数据导出成功！")
-    return {'tables': [{'meta': {'tableName': d['name']}, 'rows': d['data'].to_dict('records')} for d in dfs]}
 
-def parse_exported_json(data):
-    """解析导出的JSON数据，返回DataFrame列表"""
-    try:
-        dfs = []
-        for table in data.get('tables', []):
-            table_name = table['meta']['tableName']
-            
-            # rows数据在table['rows']中，不在meta里
-            rows = table.get('rows', [])
-            
-            if not rows:
-                print(f"⚠️ 表 [{table_name}] 没有数据")
-                continue
-            
-            # 将行数据转换为DataFrame
-            df = pd.DataFrame(rows)
-            
-            # 删除_record_id列（如果存在）
-            if '_record_id' in df.columns:
-                df = df.drop(columns=['_record_id'])
-            
-            dfs.append({
-                'name': table_name,
-                'data': df
-            })
-        
-        return dfs
-    except Exception as e:
-        print(f"❌ 解析JSON失败: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return []
+def export_table(url, table_name, output):
+    base_token, resolved_table_id = resolve_base(url)
+    table_id = resolved_table_id or table_name
+    if not table_id:
+        raise ValueError("provide --table-name when the URL does not identify a table")
+    rows = list_records(base_token, table_id)
+    data = [record.get("fields", record) for record in rows]
+    frame = pd.DataFrame(data)
+    if output.lower().endswith(".csv"):
+        frame.to_csv(output, index=False, encoding="utf-8-sig")
+    elif output.lower().endswith(".xlsx"):
+        frame.to_excel(output, index=False)
+    else:
+        raise ValueError("output must end in .csv or .xlsx")
+    print("Exported {0} rows to {1}".format(len(frame), output))
 
-def save_as_csv(dfs, output_path):
-    """将DataFrame保存为CSV"""
-    if len(dfs) == 0:
-        print("❌ 没有数据可保存")
-        return False
-    
-    # 如果只有一个表，直接保存
-    if len(dfs) == 1:
-        dfs[0]['data'].to_csv(output_path, index=False, encoding='utf-8')
-        print(f"✅ 已保存为CSV: {output_path}")
-        print(f"📊 数据行数: {len(dfs[0]['data'])}")
-        print(f"📋 字段数量: {len(dfs[0]['data'].columns)}")
-        return True
-    
-    # 如果有多个表，分别保存
-    for i, df_info in enumerate(dfs):
-        table_path = output_path.replace('.csv', f'_{df_info["name"]}.csv')
-        df_info['data'].to_csv(table_path, index=False, encoding='utf-8')
-        print(f"✅ 已保存表 [{df_info['name']}] 为CSV: {table_path}")
-        print(f"   数据行数: {len(df_info['data'])}")
-    
-    return True
-
-def save_as_excel(dfs, output_path, sheet_name=None):
-    """将DataFrame保存为Excel"""
-    if len(dfs) == 0:
-        print("❌ 没有数据可保存")
-        return False
-    
-    try:
-        with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-            for i, df_info in enumerate(dfs):
-                # 如果只有一个表且有指定sheet名称，使用指定的；否则用表名
-                sheet = sheet_name if (len(dfs) == 1 and sheet_name) else df_info['name']
-                # Excel sheet名称最长31个字符
-                sheet = sheet[:31]
-                df_info['data'].to_excel(writer, sheet_name=sheet, index=False)
-        
-        print(f"✅ 已保存为Excel: {output_path}")
-        if len(dfs) == 1:
-            print(f"📊 数据行数: {len(dfs[0]['data'])}")
-            print(f"📋 字段数量: {len(dfs[0]['data'].columns)}")
-        else:
-            print(f"📊 包含 {len(dfs)} 个工作表:")
-            for df_info in dfs:
-                print(f"   - {df_info['name']}: {len(df_info['data'])} 行")
-        
-        return True
-    except Exception as e:
-        print(f"❌ 保存Excel失败: {str(e)}")
-        return False
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Excel与飞书多维表格互转工具',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-使用示例:
-  # 导入：创建新表
-  python excel_to_bitable.py --input data.xlsx --mode create --app-name "员工表" --table-name "员工列表"
-  
-  # 导入：同步到现有表
-  python excel_to_bitable.py --input data.xlsx --mode sync --url "https://xxx.feishu.cn/base/xxx" --table-name "员工列表" --key "员工编号"
-  
-  # 导出：导出为CSV
-  python excel_to_bitable.py --mode export --url "https://xxx.feishu.cn/base/xxx" --table-name "员工列表" --output employees.csv
-  
-  # 导出：导出为Excel
-  python excel_to_bitable.py --mode export --url "https://xxx.feishu.cn/base/xxx" --table-name "员工列表" --output employees.xlsx --format excel
-  
-  # 导出：导出多个表
-  python excel_to_bitable.py --mode export --url "https://xxx.feishu.cn/base/xxx" --table-name "表1" "表2" --output data.xlsx --format excel
-        """
-    )
-    
-    # 模式选择
-    parser.add_argument('--mode', choices=['create', 'sync', 'export'], required=True, 
-                        help='操作模式：create=创建新表，sync=同步到现有表，export=导出数据')
-    
-    # 导入相关参数
-    parser.add_argument('--input', help='输入Excel/CSV文件路径（create/sync模式）')
-    parser.add_argument('--app-name', help='新表的应用名称（create模式必填）')
-    parser.add_argument('--key', help='主键字段名（sync模式必填）')
-    parser.add_argument('--no-create-missing', action='store_true', help='同步时不自动插入新行')
-    
-    # 通用参数
-    parser.add_argument('--table-name', nargs='+', help='数据表名称（export模式支持多个）')
-    parser.add_argument('--url', help='目标多维表格URL（sync/export模式）')
-    
-    # 导出相关参数
-    parser.add_argument('--output', help='输出文件路径（export模式必填）')
-    parser.add_argument('--format', choices=['csv', 'excel'], default='csv', help='导出格式：csv或excel（默认csv）')
-    parser.add_argument('--no-record-id', action='store_true', help='导出时不包含_record_id字段')
-    parser.add_argument('--sheet-name', help='Excel工作表名称（仅format=excel时有效）')
-    
+    parser = argparse.ArgumentParser(description="Safe Excel/CSV and Feishu Base synchronizer")
+    subparsers = parser.add_subparsers(dest="mode")
+    create = subparsers.add_parser("create")
+    create.add_argument("--input", required=True)
+    create.add_argument("--app-name", required=True)
+    create.add_argument("--table-name", required=True)
+    create.add_argument("--apply", action="store_true")
+    sync_parser = subparsers.add_parser("sync")
+    sync_parser.add_argument("--input", required=True)
+    sync_parser.add_argument("--url", required=True)
+    sync_parser.add_argument("--key", required=True)
+    sync_parser.add_argument("--apply", action="store_true")
+    sync_parser.add_argument("--missing-fields", choices=["prompt", "skip", "create"], default="prompt",
+                             help="when source fields are absent from the target: prompt (default), skip, or create")
+    export = subparsers.add_parser("export")
+    export.add_argument("--url", required=True)
+    export.add_argument("--table-name")
+    export.add_argument("--output", required=True)
     args = parser.parse_args()
-    
-    # 检查 lark-cli 是否已安装
-    check_lark_cli()
-    
-    # 参数校验
-    if args.mode in ['create', 'sync'] and not args.input:
-        print("❌ create/sync模式必须提供--input参数")
-        sys.exit(1)
-    
-    if args.mode == 'create' and not args.app_name:
-        print("❌ create模式必须提供--app-name参数")
-        sys.exit(1)
-    
-    if args.mode == 'sync' and (not args.url or not args.key):
-        print("❌ sync模式必须提供--url和--key参数")
-        sys.exit(1)
-    
-    if args.mode == 'export' and (not args.url or not args.output):
-        print("❌ export模式必须提供--url和--output参数")
-        sys.exit(1)
-    
-    # 执行操作
-    if args.mode == 'create':
-        # 创建新表
-        temp_csv = f"/tmp/excel_to_bitable_{int(datetime.now().timestamp())}.csv"
-        try:
-            convert_excel_to_csv(args.input, temp_csv)
-            create_new_bitable(temp_csv, args.app_name, args.table_name[0] if isinstance(args.table_name, list) else args.table_name)
-        except FileNotFoundError as e:
-            print(str(e))
-            sys.exit(1)
-        except Exception as e:
-            print(f"❌ 创建多维表格失败: {str(e)}")
-            sys.exit(1)
-        finally:
-            if os.path.exists(temp_csv):
-                os.remove(temp_csv)
-    
-    elif args.mode == 'sync':
-        # 同步到现有表
-        temp_csv = f"/tmp/excel_to_bitable_{int(datetime.now().timestamp())}.csv"
-        try:
-            convert_excel_to_csv(args.input, temp_csv)
-            sync_to_existing_bitable(
-                temp_csv, 
-                args.url, 
-                args.table_name[0] if isinstance(args.table_name, list) else args.table_name, 
-                args.key, 
-                not args.no_create_missing
-            )
-        except FileNotFoundError as e:
-            print(str(e))
-            sys.exit(1)
-        except Exception as e:
-            print(f"❌ 同步数据失败: {str(e)}")
-            sys.exit(1)
-        finally:
-            if os.path.exists(temp_csv):
-                os.remove(temp_csv)
-    
-    elif args.mode == 'export':
-        # 导出数据 - 自动识别电子表格或多维表格
-        token_info = extract_token_from_url(args.url)
-        
-        if token_info['type'] == 'sheet':
-            # 电子表格导出
-            data = export_from_spreadsheet(args.url, args.table_name, args.output, args.no_record_id)
-        elif token_info['type'] == 'bitable':
-            # 多维表格导出
-            data = export_from_bitable(args.url, args.table_name, args.output, args.no_record_id)
+    if not args.mode:
+        parser.print_help()
+        return 2
+    try:
+        if args.mode == "create":
+            create_base(read_frame(args.input), args.app_name, args.table_name, args.apply)
+        elif args.mode == "sync":
+            sync(read_frame(args.input), args.url, args.key, args.apply, args.missing_fields)
         else:
-            print("❌ 无法识别URL类型，请检查URL是否正确")
-            sys.exit(1)
-        
-        # 2. 解析JSON
-        dfs = parse_exported_json(data)
-        
-        if not dfs:
-            print("❌ 没有解析到数据")
-            sys.exit(1)
-        
-        # 3. 根据格式保存
-        if args.format == 'excel':
-            success = save_as_excel(dfs, args.output, args.sheet_name)
-        else:
-            success = save_as_csv(dfs, args.output)
-        
-        if not success:
-            sys.exit(1)
+            export_table(args.url, args.table_name, args.output)
+    except Exception as error:
+        print("ERROR: {0}".format(error), file=sys.stderr)
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
