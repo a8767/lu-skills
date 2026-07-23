@@ -21,6 +21,7 @@ function Warn($m){ Write-Host "[!] $m" -ForegroundColor Yellow }
 function Err($m){ Write-Host "[✗] $m" -ForegroundColor Red }
 
 $mode = if ($Replace) { "replace" } else { "merge" }
+$tmp = ""
 
 # ---------- 定位技能源目录 ----------
 if ($Archive -ne "") {
