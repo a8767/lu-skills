@@ -8,11 +8,12 @@
 
 ## 一、能做到的（功能与能力）
 
-### 1. 浏览器自动化读取（核心引擎 = agent-browser / CDP）
-- **复用用户已登录的 Chrome 会话态**抓取来客后台与生意经数据中心数据。
-- 已验证可用的原子能力：`connect`、`open`、`snapshot`、`click`、`fill`、`eval`、`cookies get`、`screenshot`、`tabs`。
-- 支持启动带 `--remote-debugging-port` 的 Chrome（`--user-data-dir` 持久登录态），并 `connect <port>` 接管。
-- **前提**：目标 Chrome 必须已由用户手动登录过来客/生意经；本技能**不自动输入账号密码或验证码**。
+### 1. 浏览器自动化读取（核心引擎 = Python CDP 客户端 / Edge）
+- **2026-07-22 更新**：用户偏好 **Edge 浏览器**；本环境 agent-browser 不稳定，已改用自研 Python CDP 客户端 `tools/cdp_helper.py` 作为可靠连接层。
+- **复用用户已登录的 Edge/Chrome 会话态**抓取来客后台与生意经数据中心数据。
+- 已验证可用的原子能力（Python CDP）：`targets`、`nav`、`eval`、`text`、`click`、`fill`、`rclick`（真实鼠标事件）、`wait`。
+- 启动参数必须包含 **`--remote-debugging-port=9223`（Edge）或 `9222`（Chrome） + `--remote-allow-origins=*`**，否则 CDP WebSocket 握手被 403 拒绝。
+- **前提**：目标浏览器必须已由用户手动登录过来客/生意经；本技能**不自动输入账号密码或验证码**。
 
 ### 2. 多商户切换（代运营多客户场景，实测跑通）
 - 入口：来客后台右上角公司名 → 下拉「切换商户」→ 弹「切换公司」对话框 → 搜索商户名 → 选中 → 确认。
@@ -66,7 +67,9 @@
 - **依赖**：仅 Python 标准库；Excel 输出才需可选 `openpyxl`。
 
 ### 6. 飞书文档交付（配套 lark-cli，实测）
-- 用 `lark-cli docs +create / +update --command overwrite --doc-format markdown` 把复盘报告写入/覆盖飞书文档（user 身份，实测多次成功，revision 持续递增）。
+- 用 `lark-cli docs +create --doc-format markdown --content @file.md --title "标题" --as user` 把复盘报告写入飞书文档。
+- `@file.md` 须放在当前工作目录下（相对路径），或改用 `--content -` 从 stdin 传入。
+- 生成后返回 `document_id` 与 `url`。
 
 ### 7. 安全边界
 - 默认**只读不改写**（不做上架/改价/退款等写操作）；用户明确要求写操作时二次确认后执行。
@@ -106,8 +109,11 @@
 - 生意经「流量概览」的「自然月」键**此前实测曾点错位置而误判失效**，正确做法是点页面级日期快捷键（非卡片内小选择器）。
 
 ### 6. 环境与依赖约束
-- 本环境 `agent-browser` **不在 PATH**，须用 `node` 直接跑入口脚本并指定系统 Chrome（`CHROME_PATH`）；`browser-use` CLI 仅含文档未安装，**以 agent-browser 为准**。
-- 依赖特定 node 路径与 Chrome 路径；脚本 `aggregate.py`/`normalize.py` 用 Python 标准库即可，但 Excel 输出需 `openpyxl`。
+- **2026-07-22 更新**：本环境 **agent-browser 不稳定**（Rust 子进程脱离 timeout 父进程导致命令永不结束；`connect` 报错），**以自研 Python CDP 客户端 + Edge 为准**。
+- Edge 路径：`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`，调试端口 **9223**，必须加 **`--remote-allow-origins=*`**。
+- 备选 Chrome 路径：`C:\Users\Admin\AppData\Local\Google\Chrome\Application\chrome.exe`，调试端口 **9222**，同样必须加 `--remote-allow-origins=*`。
+- Python CDP 客户端依赖 `websocket-client`（已安装在 venv：`C:\Users\Admin\.workbuddy\binaries\python\envs\default`）。
+- 脚本 `aggregate.py`/`normalize.py` 用 Python 标准库即可，但 Excel 输出需 `openpyxl`。
 - 仅支持 PC 端来客后台 / 生意经 / 直播专业版 Web；**不支持 App 端、小程序、Douyin 主端**数据。
 
 ### 7. 不适用场景

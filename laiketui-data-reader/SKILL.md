@@ -1,7 +1,7 @@
 ---
 name: laiketui-data-reader
 description: 读取抖音来客（life.douyin.com 商家后台）及其「生意经」数据中心（life-data.cn）的经营数据，支持门店管理员账号在多客户间切换读取。覆盖经营概览、流量（直播/视频/搜索）、内容分析、人群资产、团购、订单、达人分账、评价。通过浏览器自动化复用用户真实登录态，登录后抓取指标并导出为 CSV/Excel/复盘报告。支持周/月/季/年四维度复盘（统计/对比/趋势/目标完成度）。当用户要查来客后台数据、导出团购/核销明细、看经营看板、做本地生活经营复盘/周报/月报/季报/年报取数时使用。
-version: 1.4.0
+version: 1.4.1
 agent_created: true
 display_name: "来客后台数据读取"
 display_name_en: "Laiketui Data Reader"
@@ -10,12 +10,12 @@ description_en: "Read Douyin Laiketui merchant backend & 生意经 (life-data.cn
 visibility: "private"
 ---
 
-# 抖音来客后台数据读取（Laiketui Data Reader）v1.4.0
+# 抖音来客后台数据读取（Laiketui Data Reader）v1.4.1
 
 ## 用途
 通过浏览器自动化读取「抖音来客」商家后台及其「生意经」数据中心的经营数据，把抓取到的指标整理成 CSV/Excel/**多维度复盘报告**。
 
-**重要**：本 skill 经真实实测跑通（2026-07-14，青石峡漂流门店管理员账号），以下流程为已验证路径。
+**重要**：本 skill 经真实实测跑通（2026-07-14，青石峡漂流门店管理员账号），后续又经太湖梦华等客户验证并迭代为 **Edge 浏览器 + 自研 Python CDP 客户端**方案。以下流程为已验证路径。
 
 ## 何时使用
 - 用户要查/导出抖音来客后台任何经营数据（GMV、核销、订单、退款、达人分账等）。
@@ -25,14 +25,20 @@ visibility: "private"
 - 用户在做本地生活项目（团购、文旅、餐饮、加油站等）的对账或数据复盘。
 
 ## 前置依赖（本机已验证可用）
-- **引擎 = `agent-browser`**（Rust CDP 浏览器自动化 CLI，本地已装，实测可打开来客页）。
-  - 本环境它**不在 PATH**，调用方式：用 node 直接跑入口脚本，并指定系统 Chrome：
-    ```bash
-    AB="$NODE $AGENT_BROWSER_JS"   # $NODE=node 路径, $AGENT_BROWSER_JS=agent-browser 入口脚本路径
-    export CHROME_PATH="$USERPROFILE/AppData/Local/Google/Chrome/Application/chrome.exe"
-    ```
-- **`browser-use` CLI 在本环境未安装**（仅装了说明文档）。本书面以 agent-browser 为准。
-- 用户**必须已在其 Chrome 登录过来客后台**（手机号验证码）。本技能**不自动输入账号密码/验证码**，只复用已有登录态。
+
+> **2026-07-22 更新**：用户明确偏好 **Edge 浏览器**；agent-browser 在本环境出现子进程脱离、CDP 握手超时等问题，**已改用自研 Python CDP 客户端**作为可靠连接层。
+
+- **浏览器 = Microsoft Edge**（用户偏好，稳定复用登录态）。
+  - 路径：`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+  - 启动参数必须包含 **`--remote-debugging-port=9223 --remote-allow-origins=*`**，否则外部 CDP 客户端会被 403 拒绝。
+  - 一键启动脚本见 `tools/edge_debug_launch.bat`（已含 `--remote-allow-origins=*`）。
+- **连接层 = 自研 Python CDP 客户端 `tools/cdp_helper.py`**。
+  - 基于 `websocket-client`，通过预连 IPv4 套接字绕过 `getaddrinfo` IPv6 问题。
+  - 支持 `eval/nav/text/click/fill/wait/targets/ui/rclick`（`rclick` 用 CDP Input 真实鼠标事件，可触发 `window.open`/React onClick）。
+- **历史备用：agent-browser / Chrome**。
+  - 若 Edge 登录态失效，可退回 Chrome（`--remote-debugging-port=9222 --remote-allow-origins=*`）。
+  - agent-browser 在本环境不稳定，仅作备选。
+- 用户**必须已在其浏览器登录过来客后台**（手机号验证码）。本技能**不自动输入账号密码/验证码**，只复用已有登录态。
 - **聚合引擎 = `scripts/aggregate.py`**（纯标准库 Python），用于四维度复盘的统计/对比/趋势/目标完成度计算与报告生成。
 
 ## 核心原则（含实测踩坑）
@@ -45,39 +51,66 @@ visibility: "private"
 
 ## 流程
 
-### 0. 启动可连接的 Chrome（让用户当场登录——最关键一步）
-来客数据登录后才能看。来客会话 cookie 重启即丢，所以流程是：**开一个带调试端口的 Chrome → 让用户在这个窗口里登录 → 连接取数 → 期间不重启**。
+### 0. 启动可连接的 Edge（让用户当场登录——最关键一步）
+来客数据登录后才能看。来客会话 cookie 重启即丢，所以流程是：**开一个带调试端口的 Edge → 让用户在这个窗口里登录 → 连接取数 → 期间不重启**。
 
-**用 PowerShell `Start-Process` 脱离 shell 启动**（实测关键：在 bash 里用 `&` 后台起会被 shell 退出连带杀掉；PowerShell 启动则独立存活）：
-```powershell
-Start-Process -FilePath "$env:USERPROFILE\AppData\Local\Google\Chrome\Application\chrome.exe" `
-  -ArgumentList '--remote-debugging-port=9222','--remote-allow-origins=*',`
-  "--user-data-dir=$env:USERPROFILE\AppData\Local\Google\Chrome\User Data",'--no-first-run'
+**方式 A：双击一键启动脚本**（推荐）
+```bash
+C:\Users\Admin\Desktop\edge_debug_launch.bat
+# 或项目内副本
+E:\AI助理\2026-07-14-12-56-08\tools\edge_debug_launch.bat
 ```
-> 多 Profile 注意：`--profile-directory=Profile 98` 在 PowerShell 里空格会被拆开（可改无空格 junction 规避）；但实测即便加载正确 Profile，会话 cookie 仍恢复不了，最终仍需用户当场登录一次。
+脚本内容（CRLF+GBK，确保中文路径不炸）：
+```batch
+start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" ^
+  --remote-debugging-port=9223 ^
+  --remote-allow-origins=* ^
+  --user-data-dir="C:\Users\Admin\AppData\Local\Microsoft\Edge\User Data"
+```
+
+**方式 B：用 PowerShell `Start-Process` 脱离 shell 启动**
+```powershell
+Start-Process -FilePath "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" `
+  -ArgumentList '--remote-debugging-port=9223','--remote-allow-origins=*',`
+  '--user-data-dir=C:\Users\Admin\AppData\Local\Microsoft\Edge\User Data','--no-first-run'
+```
+
+> **关键参数**：`--remote-allow-origins=*` 必须加，否则外部 CDP WebSocket 客户端握手时会被 **403 Forbidden** 拒绝（此前 agent-browser 全部卡死、Python 报 10061 的根因即为此）。
 
 启动后等约 7 秒，验证端口监听：
 ```bash
-netstat -ano | grep ":9222"     # 应看到 LISTEN
-curl -s http://127.0.0.1:9222/json/version   # 应返回 Chrome 信息
+curl -s http://127.0.0.1:9223/json/version   # 应返回 Edg 信息
 ```
 
-然后连接，并**让用户在此 Chrome 窗口内完成来客登录**（手机号+短信验证码，勾选协议框）。登录后复核：
+然后连接，并**让用户在此 Edge 窗口内完成来客登录**（手机号+短信验证码，勾选协议框）。登录后用 Python CDP 客户端复核：
 ```bash
-$AB connect 9222
-$AB open "https://life.douyin.com/"
-# 用 cookies get 复核：出现 sessionid_*/uid_tt_*/sid_tt_* 即已登录
-$AB cookies get | grep -iE "sessionid|uid_tt|sid_tt|odin_tt"
+python tools/cdp_helper.py targets
+python tools/cdp_helper.py eval "document.cookie" --urlhint life-data
+# 出现 sessionid_*/uid_tt_*/sid_tt_* 即已登录
 ```
 
-### 1. 进入「生意经」数据中心（实测路径）
-- 进入 `life.douyin.com` 首页后，**点击顶部导航栏的「生意经」**（不是左侧菜单里同名的链接——侧栏同名链接只滚动首页）。
-- 点击后 URL 跳转到 `www.life-data.cn/...`，并弹出**商户选择弹窗**。
+### 1. 进入「生意经」数据中心（推荐路径：林客后台跳转）
+用户偏好路径：**抖音林客（life-partner.cn）→ 商家运营 → 商家概览 → 搜索客户 → 商家后台** → 自动跳转来客并带入 groupid → 顶部导航「生意经」。
+
+```text
+抖音林客 (life-partner.cn)
+  → 左侧菜单「商家运营」→「商家概览」
+    → 右上角搜索框输入「太湖梦华」
+      → 找到目标行后点击「商家后台」按钮
+        → 自动跳转到来客 (life.douyin.com) 并带入 groupid
+          → 点击顶部导航「生意经」进入数据中心
+```
 
 **多客户管理员切换（核心场景）**：
-- 弹窗列出当前账号可进入的所有商户。
-- 在弹窗搜索框输入客户名（如「青石峡」）快速定位 → 选中 → 进入该客户的数据中心。
+- 林客商家概览右上角搜索框支持按商家ID/名称/品牌名**模糊查找**。
+- 每行「操作」列有「商家后台」按钮，点击后自动在新标签页打开该商家来客后台。
+- 生意经内如需切换商户，可直接点页面右上角当前商户名 → 「切换商户」→ 搜索/选择目标商户（最快）。
 - **每家客户单独读取、单独导出**，文件名带客户名。
+
+**生意经 URL 直接带 groupid 切户**（已在生意经内时最快）：
+```
+https://www.life-data.cn/?groupid=1852933719817356
+```
 
 ### 1.5 切换商户（2026-07-15 实测跑通）
 
@@ -161,7 +194,22 @@ sleep 3
   - **趋势数据**：把日期范围拉到更长窗口（如月复盘拉 12 个月），读取逐子周期序列；或由 `aggregate.py review` 从已存多个周期记录拼出。
   - **目标完成度**：目标值来自 `config/targets.json`（运营维护），由脚本算完成率。
 
-提取方式：
+提取方式（Python CDP 客户端）：
+```bash
+# 看板指标：定位元素后读文本
+python tools/cdp_helper.py text "body" --urlhint life-data
+python tools/cdp_helper.py eval "document.querySelector('选择器').innerText" --urlhint life-data
+
+# 真实点击（React 组件需要可信事件）
+python tools/cdp_helper.py rclick "document.querySelector('选择器')"
+
+# 表格：直接取二维数组（喂给 normalize.py）
+python tools/cdp_helper.py eval "JSON.stringify(Array.from(document.querySelectorAll('table tbody tr')).map(r=>Array.from(r.children).map(c=>c.innerText.trim())))" --urlhint life-data > out/raw.json
+
+# 或截图后由视觉读取（需扩展 cdp_helper.py 支持 Page.captureScreenshot）
+```
+
+历史 agent-browser 命令仍可用（若环境恢复稳定）：
 ```bash
 # 看板指标：snapshot 找 @eN，逐个读
 $AB get text @eN
@@ -225,7 +273,7 @@ python scripts/aggregate.py review \
 
 完整字段映射、四维度复盘字段、选择器提示见 `references/modules.md`；提取/启动/会话坑技巧见 `references/extraction.md`；**多维度复盘数据模型见 `references/review-schema.md`**；目标配置示例见 `config/targets.json.example`。
 
-## 能力说明（实测，2026-07-15）
+## 能力说明（实测，2026-07-15；Edge+Python CDP 方案更新于 2026-07-22）
 已系统性整理为 **`references/capabilities.md`**，分两部分：
 - **能做到的**：浏览器自动化读取、多商户切换、生意经+来客+直播专业版数据读取、normalize 规整（JSON/HTML→CSV/Excel）、四维度复盘聚合（period/collect/rollup/review/query 五子命令 + 统计/对比/趋势/目标四类数据）、飞书文档交付。
 - **不能做到的**：不能自动登录（会话 cookie 重启即丢）、**视频管理页无自然月键 / 直播专业版自然月实为30天滚动窗**（这两处日期框仍受限）、沙箱拦截 blob 下载（须翻页快照解析）、React SPA 交互须 eval dispatchEvent + IIFE、人群自然月仅首购数据、需持续 collect 才有历史对比/趋势。
