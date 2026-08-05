@@ -16,3 +16,6 @@ node_modules/
 # ===== 系统垃圾 =====
 .DS_Store
 Thumbs.db
+
+# ===== Agent 运行时数据：每次运行都会变动，不纳入版本控制（仍会打进备份包） =====
+.workbuddy/
