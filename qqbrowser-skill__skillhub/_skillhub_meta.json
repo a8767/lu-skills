@@ -1,8 +1,7 @@
 {
   "slug": "qqbrowser-skill",
-  "name": "QQBrowserUse",
-  "version": "0.9.0",
-  "installedAt": 1783929302769,
-  "source": "skillhub",
-  "iconDownloadFailedAt": 1785224721338
+  "name": "qqbrowser-skill",
+  "version": "1.0.7",
+  "installedAt": 1785985407067,
+  "source": "skillhub"
 }

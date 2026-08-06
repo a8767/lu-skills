@@ -19,3 +19,8 @@ Thumbs.db
 
 # ===== Agent 运行时数据：每次运行都会变动，不纳入版本控制（仍会打进备份包） =====
 .workbuddy/
+
+# ===== 调试产物：商家后台截图 / DOM 快照，含真实经营数据，且体积大（13MB+），不纳入版本控制 =====
+laiketui-data-reader/out/
+laiketui-data-reader/tools/*.png
+laiketui-data-reader/tools/*.html
