@@ -1,0 +1,37 @@
+{
+  "slug": "memory-manager-v2",
+  "name": "记忆管家 Memory Manager",
+  "version": "3.9.0",
+  "author": "Memory Manager Team",
+  "license": "MIT",
+  "category": "productivity",
+  "tags": [
+    "memory",
+    "token",
+    "cache",
+    "cleanup",
+    "backup",
+    "prompt-template",
+    "accelerator"
+  ],
+  "compatibility": "Python 3.8+ (pure standard library; optional colorama/jieba/tiktoken with automatic fallback)",
+  "description": "AI 记忆加速器 / Token 节流阀：以「更小、更准、更省」为目标管理 .workbuddy/memory/。",
+  "triggers": [
+    "记忆管家",
+    "Token检查",
+    "节流阀",
+    "相关性加载",
+    "缓存清理",
+    "记忆搜索",
+    "记忆分析",
+    "去重",
+    "备份记忆",
+    "Prompt模板",
+    "Token趋势",
+    "缓存提醒",
+    "记忆报告",
+    "智能加载",
+    "诊断",
+    "记忆分级"
+  ]
+}

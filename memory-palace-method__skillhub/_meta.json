@@ -1,0 +1,13 @@
+{
+    "name": "memory-palace",
+    "version": "1.0.0",
+    "displayName": "记忆宫殿记忆法",
+    "displayNameEn": "Memory Palace Method",
+    "description": "你的个人知识助手 - 扫描笔记，推荐最佳结构，自动整理提炼。适应你的思维，无需固定层级。",
+    "shortDescription": "自适应个人知识管理系统",
+    "author": "smblong&bot",
+    "tags": ["memory", "knowledge", "palace", "notes", "learning", "method", "productivity"],
+    "homepage": "",
+    "platform": "any",
+    "autoRun": false
+}

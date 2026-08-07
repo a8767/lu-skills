@@ -1,0 +1,6 @@
+# Optional runtime dependencies for browser-automation-toolbox.
+# Install lazily in the active project venv / managed Python environment only when the engine is selected.
+# browser-act is installed lazily as a uv tool, not from this pip requirements file:
+#   uv tool install browser-act-cli --python 3.12
+cloakbrowser
+playwright

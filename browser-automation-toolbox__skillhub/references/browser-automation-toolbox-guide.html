@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<meta charset="UTF-8">
+<title>Browser Automation Toolbox - 使用指引</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0f0e13;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+</style>
+<svg viewBox="0 0 680 920" width="680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+
+  <rect x="20" y="16" width="640" height="888" rx="14" fill="#1E1D22" stroke="#3A3844" stroke-width="0.5"/>
+
+  <text x="340" y="50" text-anchor="middle" font-size="17" font-weight="500" fill="#E8E6F0">Browser Automation Toolbox</text>
+  <text x="340" y="70" text-anchor="middle" font-size="11.5" fill="#9B99A8">爬虫 4 套 + 普通自动化 1 套 · 平台级优先级自适应 · Skill 评估与能力合入</text>
+
+  <line x1="50" y1="86" x2="630" y2="86" stroke="#3A3844" stroke-width="0.5"/>
+
+  <!-- 适用场景 -->
+  <text x="50" y="110" font-size="12.5" font-weight="500" fill="#CECBF6">适用场景</text>
+  <text x="50" y="128" font-size="11.5" fill="#B4B2A9">网页爬取 · 表单填写 · 截图取证 · SPA 无限滚动 · 公开舆情采集</text>
+  <text x="50" y="146" font-size="11.5" fill="#B4B2A9">登录态维持 · 验证码人工接管 · Skill 评估 / 能力补齐 — 任何 Playwright 搞不定的交互任务</text>
+
+  <line x1="50" y1="160" x2="630" y2="160" stroke="#333140" stroke-width="0.5"/>
+
+  <!-- 爬虫方案标题 -->
+  <text x="50" y="184" font-size="12.5" font-weight="500" fill="#CECBF6">爬虫方案：四级降级（默认优先级自动降级，支持平台覆盖）</text>
+
+  <!-- Tier 1 -->
+  <g transform="translate(40, 196)">
+    <rect width="600" height="88" rx="10" fill="#26215C" stroke="#534AB7" stroke-width="0.8"/>
+    <circle cx="24" cy="22" r="13" fill="#534AB7"/>
+    <text x="24" y="26" text-anchor="middle" font-size="12" font-weight="500" fill="#fff">1</text>
+    <text x="48" y="20" font-size="14" font-weight="500" fill="#E8E6F0">CloakBrowser — 反检测首选（默认第一）</text>
+    <text x="48" y="40" font-size="11" fill="#AFA9EC">反指纹最强 / 持久化登录态 / 真实浏览器体验 / 本地运行无需注册</text>
+    <rect x="18" y="52" width="125" height="20" rx="5" fill="#3C3489" opacity="0.6"/>
+    <text x="80" y="66" text-anchor="middle" font-size="10" fill="#CECBF6">小红书 / 抖音 / B站</text>
+    <rect x="153" y="52" width="108" height="20" rx="5" fill="#3C3489" opacity="0.6"/>
+    <text x="207" y="66" text-anchor="middle" font-size="10" fill="#CECBF6">有反爬的外部平台</text>
+    <rect x="273" y="52" width="110" height="20" rx="5" fill="#3C3489" opacity="0.6"/>
+    <text x="328" y="66" text-anchor="middle" font-size="10" fill="#CECBF6">需要维持登录态</text>
+    <rect x="397" y="52" width="180" height="20" rx="5" fill="#534AB7" opacity="0.25"/>
+    <text x="487" y="66" text-anchor="middle" font-size="10" fill="#AFA9EC">小红书场景除外 → 见下方</text>
+  </g>
+
+  <line x1="340" y1="290" x2="340" y2="308" stroke="#888780" stroke-width="1" marker-end="url(#ad)"/>
+  <text x="356" y="302" font-size="10" fill="#6F6D78">失败则降级</text>
+
+  <!-- Tier 2: browser-act -->
+  <g transform="translate(40, 312)">
+    <rect width="600" height="112" rx="10" fill="#1A2820" stroke="#1D9E75" stroke-width="0.8"/>
+    <circle cx="24" cy="22" r="13" fill="#1D9E75"/>
+    <text x="24" y="26" text-anchor="middle" font-size="12" font-weight="500" fill="#fff">2</text>
+    <text x="48" y="20" font-size="14" font-weight="500" fill="#E8E6F0">browser-act — 云端 + CLI 双模引擎</text>
+    <text x="48" y="40" font-size="11" fill="#5DCAA5">云端浏览器池（官网注册即用）+ 本地 CLI 双模式</text>
+    <text x="48" y="56" font-size="11" fill="#5DCAA5">会话隔离 / 结构化截图 / 代理轮换 / 表单与文件操作</text>
+    <text x="48" y="72" font-size="11" fill="#5DCAA5">AI Agent 原生设计：每次执行前拉取核心指南确保安全合规</text>
+    <rect x="18" y="84" width="195" height="20" rx="5" fill="#085041" opacity="0.6"/>
+    <text x="115" y="98" text-anchor="middle" font-size="10" fill="#9FE1CB">Cloak 失败后的主力兜底方案</text>
+    <rect x="225" y="84" width="165" height="20" rx="5" fill="#085041" opacity="0.6"/>
+    <text x="307" y="98" text-anchor="middle" font-size="10" fill="#9FE1CB">人机协作 / 代理场景</text>
+    <rect x="404" y="84" width="175" height="20" rx="5" fill="#1D9E75" opacity="0.25"/>
+    <text x="491" y="98" text-anchor="middle" font-size="10" fill="#5DCAA5">小红书场景 → 默认第一！</text>
+  </g>
+
+  <line x1="340" y1="430" x2="340" y2="448" stroke="#888780" stroke-width="1" marker-end="url(#ad)"/>
+  <text x="356" y="442" font-size="10" fill="#6F6D78">仍失败 → 尝试兜底</text>
+
+  <!-- Tier 3 & 4 side by side -->
+  <g transform="translate(40, 454)">
+    <rect width="292" height="70" rx="10" fill="#2C1E14" stroke="#D85A30" stroke-width="0.8"/>
+    <circle cx="24" cy="22" r="13" fill="#D85A30"/>
+    <text x="24" y="26" text-anchor="middle" font-size="12" font-weight="500" fill="#fff">3</text>
+    <text x="48" y="20" font-size="13" font-weight="500" fill="#E8E6F0">Kimi WebBridge</text>
+    <text x="48" y="40" font-size="11" fill="#F0997B">浏览器插件桥接，绕过部分前端反爬</text>
+    <text x="48" y="56" font-size="11" fill="#F0997B">需安装 Kimi 插件，用时再引导配置</text>
+  </g>
+  <g transform="translate(348, 454)">
+    <rect width="292" height="70" rx="10" fill="#222830" stroke="#378ADD" stroke-width="0.8"/>
+    <circle cx="24" cy="22" r="13" fill="#378ADD"/>
+    <text x="24" y="26" text-anchor="middle" font-size="12" font-weight="500" fill="#fff">4</text>
+    <text x="48" y="20" font-size="13" font-weight="500" fill="#E8E6F0">Playwright</text>
+    <text x="48" y="40" font-size="11" fill="#85B7EB">纯确定性执行，零依赖门槛最低</text>
+    <text x="48" y="56" font-size="11" fill="#85B7EB">本地应用 / 内部系统 / 不敏感页面</text>
+  </g>
+
+  <!-- 小红书特殊规则 -->
+  <line x1="50" y1="540" x2="630" y2="540" stroke="#333140" stroke-width="0.5"/>
+  <g transform="translate(40, 548)">
+    <rect width="600" height="52" rx="8" fill="#1A2820" stroke="#1D9E75" stroke-width="0.6" stroke-dasharray="4 2"/>
+    <text x="300" y="18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#9FE1CB">平台优先级覆盖：小红书</text>
+    <text x="300" y="36" text-anchor="middle" font-size="11" fill="#5DCAA5">实战验证：browser-act 云端浏览器池绕过小红书反爬成功率更高，自动提升为第一优先级</text>
+    <text x="300" y="50" text-anchor="middle" font-size="10" fill="#5DCAA5">其他平台保持 cloak > browser-act；用户可显式指定偏好顺序</text>
+  </g>
+
+  <!-- 兜底说明 -->
+  <line x1="50" y1="612" x2="630" y2="612" stroke="#333140" stroke-width="0.5"/>
+  <g transform="translate(40, 620)">
+    <rect width="600" height="44" rx="8" fill="#2C2A22" stroke="#BA7517" stroke-width="0.6"/>
+    <text x="300" y="18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#EF9F27">兜底策略</text>
+    <text x="300" y="35" text-anchor="middle" font-size="11" fill="#FAC775">前两级为最优解。遇困难点时依次尝试后两级看能否走通。每引擎默认重试 2 轮。</text>
+  </g>
+
+  <!-- 使用场景 -->
+  <line x1="50" y1="676" x2="630" y2="676" stroke="#333140" stroke-width="0.5"/>
+  <text x="50" y="698" font-size="12.5" font-weight="500" fill="#CECBF6">使用场景</text>
+  <g transform="translate(40, 708)">
+    <rect width="600" height="76" rx="8" fill="#261A35" stroke="#993556" stroke-width="0.6"/>
+    <text x="18" y="18" font-size="11.5" font-weight="500" fill="#ED93B1">1）存量爬虫 Skill 评估与能力合入</text>
+    <text x="18" y="36" font-size="11" fill="#F4C0D1">"用 Toolbox 评估我的 XXX skill" / "让 XXX skill 参考 Toolbox" / "把 toolbox 能力合入 XXX"</text>
+    <text x="18" y="54" font-size="11.5" font-weight="500" fill="#ED93B1">2）新自动化任务</text>
+    <text x="18" y="70" font-size="11" fill="#F4C0D1">"帮我获取 XXX 网站的 XXX 内容" — Agent 自动按优先级逐引擎尝试</text>
+  </g>
+
+  <!-- 普通自动化方案：BrowserSkill -->
+  <line x1="50" y1="796" x2="630" y2="796" stroke="#333140" stroke-width="0.5"/>
+  <text x="50" y="818" font-size="12.5" font-weight="500" fill="#CECBF6">普通自动化方案 · 互补工具（非引擎，独立安装）</text>
+  <g transform="translate(40, 828)">
+    <rect width="600" height="64" rx="8" fill="#0C2A3A" stroke="#378ADD" stroke-width="0.6"/>
+    <text x="18" y="18" font-size="13" font-weight="500" fill="#85B7EB">BrowserSkill（腾讯 / MIT）— Agent ↔ 用户已登录真实浏览器的本地桥接</text>
+    <text x="18" y="34" font-size="11" fill="#B5D4F4">复用真实登录态 / 独立 Agent Window 不打扰用户 / 内置 human-in-loop / 纯本地</text>
+    <text x="18" y="50" font-size="11" fill="#B5D4F4">适合：操作已登录的内部系统、个人微信、付费订阅等非反爬场景；不参与爬虫降级链</text>
+  </g>
+
+  <!-- Footer tag -->
+  <text x="340" y="912" text-anchor="middle" font-size="9.5" fill="#5F5E5A">browser-automation-toolbox · v2 — 爬虫降级 / 平台自适应 / Skill 评估 / 互补 BrowserSkill</text>
+</svg>
+</html>
