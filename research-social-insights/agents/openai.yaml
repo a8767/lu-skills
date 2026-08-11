@@ -1,0 +1,4 @@
+interface:
+  display_name: "社媒洞察研究"
+  short_description: "扫描中文 AI 社媒风向并深挖国内平台讨论与评论证据"
+  default_prompt: "使用 $research-social-insights 扫描近期中文 AI 社媒风向，或围绕一个主题研究国内中文平台的讨论与评论证据。"

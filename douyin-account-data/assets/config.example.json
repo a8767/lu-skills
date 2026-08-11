@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "timezone": "Asia/Shanghai",
+  "minimum_comparison_plays": 1000,
+  "minimum_comparison_age_hours": 24,
+  "content_line_overrides": {},
+  "content_line_prefix_overrides": {},
+  "content_lines": [],
+  "default_content_line": "未分类",
+  "workflow_map": {}
+}

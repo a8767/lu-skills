@@ -1,15 +1,17 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends CodeBuddy's capabilities with specialized knowledge, workflows, or tool integrations.
+description: Guide for creating effective skills. This skill should be used when
+  users want to create a new skill (or update an existing skill) that extends
+  CodeBuddy's capabilities with specialized knowledge, workflows, or tool
+  integrations.
 version: 0.2.0
 license: Complete terms in LICENSE.txt
-allowed-tools:
-disable: false
-display_name: "技能创建指南"
-display_name_en: "Skill Creator"
-description_zh: "创建和维护自定义技能的指南"
-description_en: "Guide for creating custom skills"
-visibility: "public"
+allowed-tools: null
+display_name: 技能创建指南
+display_name_en: Skill Creator
+description_zh: 创建和维护自定义技能的指南
+description_en: Guide for creating custom skills
+visibility: public
 ---
 
 # Skill Creator

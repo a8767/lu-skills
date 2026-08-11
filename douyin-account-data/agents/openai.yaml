@@ -1,0 +1,4 @@
+interface:
+  display_name: "抖音账号数据"
+  short_description: "在 macOS 或 Windows 拉取本人抖音数据并更新 Workbench"
+  default_prompt: "使用 $douyin-account-data 从我已授权并已登录的抖音创作者中心采集本人账号数据，完成质量校验并更新 Personal AI Workbench。"
