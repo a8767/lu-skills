@@ -1,7 +1,7 @@
 ---
 name: multi-wordcheck
 description: 基于官方违禁词库，覆盖公众号、小红书、抖音三大平台审核标准，支持文案、文件、图片、链接多形式输入，快速输出违禁词标记与上下文替换建议。
-version: 1.2.2
+version: 1.2.3
 tags:
 - prohibited-words
 - sensitive-words
@@ -19,10 +19,10 @@ dependency:
   auth: REDFOX_API_KEY
   env_override: PROHIBITED_WORD_API_URL
 display_name: 多平台违禁词检测
-display_name_en: Multi-Platform Sensitive Word Check
-description_zh: 基于官方违禁词库，覆盖公众号、小红书、抖音审核标准，快速检测违禁词并给出替换建议
-description_en: Detect sensitive words against official lists for WeChat, Xiaohongshu and Douyin, with replacement suggestions.
-category: writing
+display_name_en: Multi-Platform Prohibited Word Check
+description_zh: 覆盖公众号、小红书、抖音三大平台，支持多形式输入，快速输出违禁词标记与上下文替换建议
+description_en: Covers WeChat, Xiaohongshu, and Douyin platforms with multi-format input for prohibited word detection and replacement suggestions
+category: social-media
 author: 红狐数据
 ---
 # 多平台违禁词检测
@@ -71,7 +71,7 @@ author: 红狐数据
 ### 前置条件
 
 - Python 3.8+，已安装依赖 `requests==2.31.0`、`beautifulsoup4==4.12.3`
-- 获取 `REDFOX_API_KEY`（访问 [RedFox 官网](https://redfox.hk/) 注册账号，新用户获赠免费积分）
+- 获取 `REDFOX_API_KEY`（访问 [RedFox 官网](https://redfox.hk/?source=workbuddy) 注册账号，新用户获赠免费积分）
 
 ### 鉴权
 

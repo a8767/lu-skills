@@ -44,8 +44,10 @@ def browser_ws_url():
         return BROWSER_WS
     v = _http_get_json("/json/version")
     u = v["webSocketDebuggerUrl"]
-    if "localhost" in u:
-        u = u.replace("localhost", "127.0.0.1")
+    # 部分 Edge 构建在 webSocketDebuggerUrl 中省略端口（如 ws://127.0.0.1/devtools/...），
+    # 必须强制补齐为 127.0.0.1:DEBUG_PORT，否则会连到 80 端口被拒（ConnectionRefused 10061）。
+    import re
+    u = re.sub(r"^ws://[^/]+", "ws://127.0.0.1:%d" % DEBUG_PORT, u)
     BROWSER_WS = u
     return u
 

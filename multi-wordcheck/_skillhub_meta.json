@@ -2,7 +2,7 @@
   "name": "多平台违禁词检测",
   "installedAt": 1786345449626,
   "source": "marketplace",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "skillId": "skill_2084102609373351936",
   "description_zh": "基于官方违禁词库，覆盖公众号、小红书、抖音审核标准，快速检测违禁词并给出替换建议",
   "description_en": "Detect sensitive words against official lists for WeChat, Xiaohongshu and Douyin, with replacement suggestions.",
