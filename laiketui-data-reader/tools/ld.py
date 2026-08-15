@@ -11,7 +11,9 @@ import urllib.request
 import websocket
 
 DEBUG_PORT = 9223
-TARGET_HINT = "life-data"
+DEFAULT_TARGET_HINT = "life-data"
+# 兼容旧名（保留避免外部脚本误引用）
+TARGET_HINT = DEFAULT_TARGET_HINT
 
 # 按叶子文本点击其最近的可点击祖先（BUTTON/role=button/clickable class）
 JS_CLICK_TEXT = (
@@ -49,16 +51,30 @@ def _http_json(path):
         return json.loads(r.read().decode())
 
 
-def find_target_id():
+def find_target_id(target_hint=None):
+    """Locate a page-type CDP target whose URL/title contains target_hint.
+
+    Args:
+        target_hint: substring to match (e.g. 'life-data' for 生意经,
+                     'life-partner' for 抖音林客). Falls back to DEFAULT_TARGET_HINT.
+    """
+    hint = target_hint or DEFAULT_TARGET_HINT
     for t in _http_json("/json"):
-        if t.get("type") == "page" and TARGET_HINT in (t.get("url") or ""):
-            return t.get("id")
-    raise SystemExit("life-data target not found (not logged in?)")
+        if t.get("type") == "page" and hint in (t.get("url") or ""):
+            return t.get("id"), hint
+    # 没找到时，把 hint 写进报错，提示用户去对应域登录
+    raise SystemExit(
+        f"CDP target not found for hint={hint!r} (not logged in or wrong tab?)")
 
 
 class LD:
-    def __init__(self, target_id=None):
-        self.tid = target_id or find_target_id()
+    def __init__(self, target_id=None, target_hint=None):
+        if target_id is None:
+            target_id, hint = find_target_id(target_hint)
+            self.hint = hint
+        else:
+            self.hint = target_hint or DEFAULT_TARGET_HINT
+        self.tid = target_id
         self.ws = websocket.create_connection(
             f"ws://127.0.0.1:{DEBUG_PORT}/devtools/page/{self.tid}", timeout=40)
         self._id = 0

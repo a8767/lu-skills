@@ -23,6 +23,7 @@ visibility: "private"
 - 用户要做经营复盘/分析报告，且明确了**周期**：**周复盘 / 月复盘 / 季复盘 / 年复盘**。
 - 用户是**门店管理员账号、下挂多家客户**（如代运营公司）：需在多家客户之间切换读取、分别导出（文件名带客户名）。
 - 用户在做本地生活项目（团购、文旅、餐饮、加油站等）的对账或数据复盘。
+- **2026-08-15 新增**：用户是**服务商 / 代运营公司**，要一次拉出**旗下全部代运营商家**在某时间窗的核销GMV / 退款GMV / 总预估佣金 / 服务商预估佣金，并测算推广佣金成本（=总-服务商）。入口在**抖音林客 (`life-partner.cn`) → 商家数据 → 探索列表**，跑 `tools/extract_daiyunying.py` 即可。
 
 ## 前置依赖（本机已验证可用）
 
@@ -258,6 +259,48 @@ python scripts/aggregate.py review \
 
 > 提示：对比的「同比」需要历史上同年同周期的记录；趋势需要历史上连续子周期记录。首次使用只有当期数据是正常的——把每周/每月的记录持续 `collect`，后续月/季/年复盘的对比与趋势会自动补全。
 
+### 4.7 代运营商家全量采集（抖音林客 → 探索列表，2026-08-15 新增）
+
+> 用途：**代运营公司一次拉出旗下全部代运营商家**在某时间窗的核销GMV / 退款GMV / 总预估佣金 / 服务商预估佣金（含衍生：核销率 / 退款率 / 推广佣金成本）。
+> 与前面「生意经单商家复盘」互为补充：第 4.5 节看**单商家纵向**，本节看**跨商家横向 + 服务商成本测算**。
+
+**前置**：Edge/Chrome 已登录 `life-partner.cn`（与管理「生意经」的 Chrome 是同一个，cookie 不同但同账号体系）。
+
+**脚本**：`tools/extract_daiyunying.py`（已实现）
+- 默认：服务中商家 + 近1个月（30天滚动窗）
+- 支持子 tab：`--tab 全部商家 / 服务中商家 / 无忧核商家 / 新签商家 / 取关合作商家`
+- 支持时间：`--period 近1个月|近7天|昨天|natural|custom`，后两者配合 `--y1 --m1 --d1 --y2 --m2 --d2`
+
+```bash
+# 1) 默认（服务中商家 + 近1个月）
+python tools/extract_daiyunying.py
+
+# 2) 自然月（2026-07），用户最常用
+python tools/extract_daiyunying.py --period natural \
+    --y1 2026 --m1 7 --d1 1 --y2 2026 --m2 7 --d2 31 \
+    --out "代运营_2026-07.csv"
+
+# 3) 全部商家（不限代运营状态）
+python tools/extract_daiyunying.py --tab 全部商家 --period 近7天
+```
+
+**脚本自动做的事**：
+1. `ld.LD(target_hint="life-partner")` — 复用 `ld.py`，仅 hint 不同（不创建并行客户端）
+2. 导航：左菜单「商家数据」→ 顶部 tab「探索列表」
+3. 设时间范围（`natural`/`custom` 走 `set_range`，复用生意经日历的 byted-date 双月面板打法）
+4. 切子 tab（默认 服务中商家）
+5. 检测分页（读「商家总数: N」+ 当前页码 + 每页大小），循环点「下一页」按钮（**真实鼠标**，React SPA 必备）
+6. 读取每一行（按列名映射到标准英文键），衍生计算核销率/退款率/推广佣金成本
+7. 输出 `out/代运营_<tab>_<period>.csv` + `.json`（原始备份，便于排查）
+
+**典型输出列**（CSV 标准键）：`merchant_name / merchant_id / industry / cooperation_mode / category / business_score / pay_gmv / verified_gmv / refund_gmv / verified_medical_gmv / live_pay_gmv / total_est_commission / provider_est_commission` + 衍生 `_yuan`/`_num`/`verify_rate`/`refund_rate`/`promotion_cost_yuan`。
+
+**已知踩坑 / 首次跑建议**：
+- 必跑一次并把 `.json` 备份打开看 `headers`，确认 `provider_est_commission` 是否抓到（部分版本列在水平滚动区右侧）。
+- 时间口径：「近1个月」≠ 自然月，跨月对比务必用 `--period natural --y1 --m1 ... --y2 --m2 ...` 显式锁定。
+- 商家总数 > 100 时脚本会跑较久（每页 ~0.6s + 网络延迟），请勿中途重启 Edge。
+- 完整字段定义、衍生公式、与生意经复盘的关系见 `references/modules.md` 第 9 节。
+
 ### 5. 收尾
 - 多客户：回到商户选择弹窗 → 选下一家 → 重复步骤 2–4.5（**不要重启 Chrome**，保持登录态）。
 - 全部完成后 `$AB close`。
@@ -274,11 +317,12 @@ python scripts/aggregate.py review \
 | 订单与核销 | life.douyin.com 订单 | 订单号、状态、退款、核销时间 |
 | 达人带货 | life.douyin.com 营销/精选联盟 | 达人、GMV、佣金、结算状态 |
 | 评价管理 | life.douyin.com 评价 | 评分、评价内容、回复状态 |
+| **代运营商家列表（2026-08-15 新）** | **life-partner.cn 商家数据→探索列表** | **支付/核销/退款GMV、总预估佣金、服务商预估佣金（差值=推广成本）** |
 
 完整字段映射、四维度复盘字段、选择器提示见 `references/modules.md`；提取/启动/会话坑技巧见 `references/extraction.md`；**多维度复盘数据模型见 `references/review-schema.md`**；目标配置示例见 `config/targets.json.example`。
 
-## 能力说明（实测，2026-07-15；Edge+Python CDP 方案更新于 2026-07-22）
+## 能力说明（实测，2026-07-15；Edge+Python CDP 方案更新于 2026-07-22；林客代运营采集新增于 2026-08-15）
 已系统性整理为 **`references/capabilities.md`**，分两部分：
-- **能做到的**：浏览器自动化读取、多商户切换、生意经+来客+直播专业版数据读取、normalize 规整（JSON/HTML→CSV/Excel）、四维度复盘聚合（period/collect/rollup/review/query 五子命令 + 统计/对比/趋势/目标四类数据）、飞书文档交付。
+- **能做到的**：浏览器自动化读取、多商户切换、生意经+来客+直播专业版数据读取、**林客代运营全量商家采集（核销/退款/两列佣金 + 推广成本测算，2026-08-15 新）**、normalize 规整（JSON/HTML→CSV/Excel）、四维度复盘聚合（period/collect/rollup/review/query 五子命令 + 统计/对比/趋势/目标四类数据）、飞书文档交付。
 - **不能做到的**：不能自动登录（会话 cookie 重启即丢）、**视频管理页无自然月键 / 直播专业版自然月实为30天滚动窗**（这两处日期框仍受限）、沙箱拦截 blob 下载（须翻页快照解析）、React SPA 交互须 eval dispatchEvent + IIFE、人群自然月仅首购数据、需持续 collect 才有历史对比/趋势。
   - **注**：生意经「自定义」日历**已自动化打通**（用户发截图教学），方法见 `references/user-taught-methods.md`，不再属于"不能做到"。
