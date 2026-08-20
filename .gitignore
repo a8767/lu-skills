@@ -24,3 +24,6 @@ Thumbs.db
 laiketui-data-reader/out/
 laiketui-data-reader/tools/*.png
 laiketui-data-reader/tools/*.html
+# 代运营月度报表导出（含真实商家名称/GMV/佣金等经营数据，按月份生成，不入库）
+laiketui-data-reader/代运营_*.csv
+laiketui-data-reader/代运营_*.json
