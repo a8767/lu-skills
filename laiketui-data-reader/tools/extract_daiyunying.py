@@ -167,19 +167,24 @@ def set_page_size(ld_inst, size=50):
 
 
 def click_next(ld_inst, retries=8):
-    """点击下一页（.byted-pager-item 最后一个=下一页箭头）。带重试以规避 React 重渲染瞬时空窗。"""
+    """点击下一页（.byted-pager-item 最后一个=下一页箭头）。
+    2026-08-21 修正：增加 scrollIntoView + JS .click() 兜底，降低真实鼠标事件未命中概率。"""
     for _ in range(retries):
         js = r"""
         return (function(){
           var items=[].slice.call(document.querySelectorAll('.byted-pager-item'));
           if(!items.length) return null;
-          var next=items[items.length-1]; // 末项=下一页箭头（图标按钮）
+          var next=items[items.length-1];
+          if(next.disabled || (next.getAttribute('class')||'').indexOf('disabled')>=0) return 'disabled';
+          next.scrollIntoView({block:'nearest',inline:'nearest'});
           var r=next.getBoundingClientRect();
           if(!r.width && !r.height) return null;
-          return {x:Math.round(r.x+r.width/2), y:Math.round(r.y+r.height/2)};
+          return {x:Math.round(r.x+r.width/2), y:Math.round(r.y+r.height/2), el:true};
         })()
         """
         pos = ld_inst.eval(js)
+        if pos == "disabled":
+            return False
         if pos and "x" in pos:
             ld_inst._send("Input.dispatchMouseEvent",
                           {"type": "mouseMoved", "x": pos["x"], "y": pos["y"], "modifiers": 0}, timeout=10)
@@ -188,6 +193,12 @@ def click_next(ld_inst, retries=8):
                               {"type": typ, "x": pos["x"], "y": pos["y"],
                                "button": "left", "clickCount": 1, "modifiers": 0}, timeout=10)
             return True
+        # fallback: 直接用 JS click
+        fallback = ld_inst.eval("(function(){var items=[].slice.call(document.querySelectorAll('.byted-pager-item')); if(!items.length) return 'no-items'; var next=items[items.length-1]; if(next.disabled) return 'disabled'; next.scrollIntoView(); next.click(); return 'clicked';})()")
+        if fallback in ("clicked",):
+            return True
+        if fallback == "disabled":
+            return False
         time.sleep(0.4)
     return False
 
@@ -247,14 +258,20 @@ def harvest_all_pages(ld_inst, max_pages=20):
         if not click_next(ld_inst):
             print("[翻页] 找不到下一页按钮，停止", flush=True)
             break
-        # 等表格真正刷新：首行商家变化（=新页已加载）或 页码变化（最多 ~6s）
+        # 等表格真正刷新：页码变化 且 首行商家变化（最多 ~12s）
         refreshed = False
-        for _ in range(15):
+        for _ in range(30):
             time.sleep(0.4)
             nxt = get_checked_page(ld_inst)
             rows2 = get_rows(ld_inst)
             sig2 = rows2[0][0] if rows2 else ""
-            if nxt != cur or (sig2 and pre_first and sig2 != pre_first):
+            page_changed = nxt != cur
+            data_changed = sig2 and pre_first and sig2 != pre_first
+            if page_changed and data_changed:
+                refreshed = True
+                break
+            # 容错：页码确实变了且超过 4s 仍没新数据，也继续（有些页可能为空或 API 慢）
+            if page_changed and _ >= 10:
                 refreshed = True
                 break
         if not refreshed:
@@ -263,18 +280,86 @@ def harvest_all_pages(ld_inst, max_pages=20):
     return all_rows, total
 
 
-def navigate(ld_inst, tab, period):
-    """导航到 商家数据→商家列表，设时间预设，切子 tab。"""
-    # 1) 左侧菜单 商家数据
-    ld_inst.click_text("商家数据")
-    time.sleep(1.2)
-    # 2) 顶部 Tab 商家列表（截图里的"探索列表"在本账号即"商家列表"）
+def set_custom_period(ld_inst, start, end):
+    """林客商家数据页「自定义」统计周期：
+    点自定义 → 双月日历选 start~end 日期格（跨月先起后止）→ 点「确定」。
+    start/end 形如 '2026-07-01' / '2026-07-31'。best-effort，返回 (start_res, end_res)。"""
+    try:
+        ld_inst.click_text("自定义")
+    except Exception:
+        print("[自定义] 找不到「自定义」入口", flush=True)
+        return (None, None)
+    time.sleep(1.8)
+
+    def click_day(day_str):
+        # 林客日历日格 className 含 byted-date-date / byted-date-item
+        js = r"""
+        var target=%s;
+        var day=String(parseInt(target.split('-')[2],10));
+        var cells=[].slice.call(document.querySelectorAll('.byted-date-date, .byted-date-item'));
+        for(var i=0;i<cells.length;i++){
+          var c=cells[i];
+          if((c.textContent||'').trim()===day){
+            var r=c.getBoundingClientRect();
+            if(r.width||r.height){
+              c.scrollIntoView({block:'center'});
+              // byted 日期格需要真实鼠标事件才能触发 onClick
+              window.__lt={x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};
+              return 'found';
+            }
+          }
+        }
+        return 'notfound';
+        """ % json.dumps(day_str)
+        r = ld_inst.eval(js)
+        if r != 'found':
+            return r
+        pos = ld_inst.eval("window.__lt")
+        if not pos:
+            return 'no-pos'
+        for typ in ("mouseMoved", "mousePressed", "mouseReleased"):
+            ld_inst._send("Input.dispatchMouseEvent",
+                          {"type": typ, "x": pos["x"], "y": pos["y"],
+                           "button": "left", "clickCount": 1, "modifiers": 0}, timeout=10)
+        time.sleep(0.3)
+        return 'clicked'
+
+    r1 = click_day(start)
+    time.sleep(0.9)
+    r2 = click_day(end)
+    time.sleep(0.9)
+    try:
+        ld_inst.click_text("确定")
+    except Exception:
+        print("[自定义] 未找到「确定」按钮", flush=True)
+    time.sleep(1.5)
+    print(f"[自定义] 周期 {start} ~ {end}（开始:{r1} 结束:{r2}）", flush=True)
+    return (r1, r2)
+
+
+def navigate(ld_inst, tab, period, start=None, end=None):
+    """导航到 商家数据→商家列表，设时间（预设或自定义），切子 tab。
+    2026-08-21 修正：新版林客首页把内容放在 iframe/summon 里，
+    直接跳转到商家数据 SPA 路由，避免从首页点击菜单找不到表头。"""
+    target_url = "https://www.life-partner.cn/subapp/dp-life-service-provider-pro/businessData?from_page=merchant_operation"
+    current = ld_inst.eval("return window.location.href") or ""
+    if "businessData" not in current:
+        ld_inst.eval(f"window.location.href = {json.dumps(target_url)}")
+        print(f"[导航] 跳转至商家数据页：{target_url}", flush=True)
+        time.sleep(3.5)
+    else:
+        print(f"[导航] 已在商家数据页：{current}", flush=True)
+
+    # 1) 顶部 Tab 商家列表
     ld_inst.click_text("商家列表")
     time.sleep(1.5)
-    # 3) 时间预设（本月 / 近7天 / 近30天 / 近1天 / 今日实时）
-    ld_inst.click_text(period)
-    time.sleep(1.5)
-    # 4) 子 tab（全部商家 等）
+    # 2) 时间：自定义周期 或 预设
+    if start and end:
+        set_custom_period(ld_inst, start, end)
+    else:
+        ld_inst.click_text(period)
+        time.sleep(1.5)
+    # 3) 子 tab（全部商家 等）
     ld_inst.click_text(tab)
     time.sleep(1.5)
 
@@ -328,6 +413,8 @@ def main():
                    help="子tab：全部商家 / 服务中商家 / 无动销商家 / 新签商家 / 取消合作商家")
     p.add_argument("--period", default="本月",
                    help="时间预设：本月 | 近7天 | 近30天 | 近1天 | 今日实时")
+    p.add_argument("--start", default=None, help="自定义周期开始日期 YYYY-MM-DD（与 --end 同用）")
+    p.add_argument("--end", default=None, help="自定义周期结束日期 YYYY-MM-DD")
     p.add_argument("--out", default=None, help="输出 CSV 路径")
     p.add_argument("--max-pages", type=int, default=20)
     args = p.parse_args()
@@ -340,7 +427,7 @@ def main():
         sys.exit(1)
     print(f"[连接] hint={ld_inst.hint} tid={ld_inst.tid}", flush=True)
 
-    navigate(ld_inst, args.tab, args.period)
+    navigate(ld_inst, args.tab, args.period, start=args.start, end=args.end)
     time.sleep(1.0)
 
     headers = get_headers(ld_inst)
@@ -355,6 +442,10 @@ def main():
 
     goto_page1(ld_inst)
     time.sleep(1.0)
+
+    # 2026-08-21 修正：优先把每页条数调到 50，减少翻页次数，降低翻页失败概率
+    print("[分页] 尝试设置每页 50 条...", flush=True)
+    set_page_size(ld_inst, 50)
 
     rows, total = harvest_all_pages(ld_inst, max_pages=args.max_pages)
     print(f"[汇总] 采集 {len(rows)} 行（声明总数 {total}）", flush=True)
