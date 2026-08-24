@@ -151,19 +151,46 @@ def get_stat_time(ld_inst):
     return ld_inst.eval(js)
 
 
-def set_page_size(ld_inst, size=50):
-    """把每页条数调到 size（10/20/50），减少翻页次数。best-effort，失败返回 False。"""
-    try:
-        ld_inst.click_text("10条/页")  # 打开页大小下拉（当前值）
-    except Exception:
-        pass
-    time.sleep(0.8)
-    try:
-        ld_inst.click_text(f"{size}条/页")
-        time.sleep(1.2)
-        return True
-    except Exception:
+def set_page_size(ld_inst, size=100):
+    """把每页条数调到 size（优先 100，其次 50），减少翻页次数。
+    新版林客页大小是 byted-select，需要真实鼠标点开下拉再选选项。best-effort。"""
+    js = r"""
+    return (function(){
+      var selects=[].slice.call(document.querySelectorAll('.byted-select'));
+      for(var i=0;i<selects.length;i++){
+        var s=selects[i];
+        var val=s.querySelector('.byted-select-value');
+        if(val && /条\/页/.test(val.value||'')){
+          var r=val.getBoundingClientRect();
+          return {x:r.x+r.width/2, y:r.y+r.height/2, current:val.value};
+        }
+      }
+      return null;
+    })();
+    """
+    info = ld_inst.eval(js)
+    if not (info and isinstance(info, dict)):
         return False
+    print(f"[分页] 当前每页条数: {info.get('current')}", flush=True)
+    ld_inst._click_at(info["x"], info["y"])
+    time.sleep(0.8)
+    # 兼容多种选项 class
+    opt_js = (
+        "return (function(){"
+        "var opts=[].slice.call(document.querySelectorAll('.byted-select-dropdown-item, .byted-select-dropdown-option, .byted-select-option, .byted-select-item'));"
+        "for(var i=0;i<opts.length;i++){"
+        "  if((opts[i].textContent||'').trim()===" + json.dumps(f"{size}条/页") + "){"
+        "    var r=opts[i].getBoundingClientRect(); return {x:r.x+r.width/2, y:r.y+r.height/2};"
+        "  }"
+        "}"
+        "return null;})();"
+    )
+    opt = ld_inst.eval(opt_js)
+    if opt and isinstance(opt, dict):
+        ld_inst._click_at(opt["x"], opt["y"])
+        time.sleep(1.5)
+        return True
+    return False
 
 
 def click_next(ld_inst, retries=8):
@@ -280,85 +307,189 @@ def harvest_all_pages(ld_inst, max_pages=20):
     return all_rows, total
 
 
-def set_custom_period(ld_inst, start, end):
-    """林客商家数据页「自定义」统计周期：
-    点自定义 → 双月日历选 start~end 日期格（跨月先起后止）→ 点「确定」。
-    start/end 形如 '2026-07-01' / '2026-07-31'。best-effort，返回 (start_res, end_res)。"""
-    try:
-        ld_inst.click_text("自定义")
-    except Exception:
-        print("[自定义] 找不到「自定义」入口", flush=True)
-        return (None, None)
-    time.sleep(1.8)
+def _read_preview(ld_inst):
+    """读取日期选择器预览文本，例如 '2026-08-01 ～ 2026-08-23'。"""
+    js = r"""
+    return (function(){
+      var d=document.querySelector('.dd-advanced-date-picker-preview-content');
+      if(d) return (d.textContent||'').trim();
+      return null;
+    })();
+    """
+    return ld_inst.eval(js)
 
-    def click_day(day_str):
-        # 林客日历日格 className 含 byted-date-date / byted-date-item
-        js = r"""
-        var target=%s;
-        var day=String(parseInt(target.split('-')[2],10));
-        var cells=[].slice.call(document.querySelectorAll('.byted-date-date, .byted-date-item'));
-        for(var i=0;i<cells.length;i++){
-          var c=cells[i];
-          if((c.textContent||'').trim()===day){
-            var r=c.getBoundingClientRect();
-            if(r.width||r.height){
-              c.scrollIntoView({block:'center'});
-              // byted 日期格需要真实鼠标事件才能触发 onClick
-              window.__lt={x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};
-              return 'found';
-            }
-          }
+
+def _click_custom_time(ld_inst):
+    """真实鼠标点击「自定义时间」标签以打开双月日历弹层。"""
+    js = r"""
+    return (function(){
+      var all=[].slice.call(document.querySelectorAll('*'));
+      for(var i=0;i<all.length;i++){
+        var e=all[i];
+        if(e.children.length===0 && e.textContent.trim()==='自定义时间'){
+          var r=e.getBoundingClientRect();
+          return {x:r.x+r.width/2, y:r.y+r.height/2};
         }
-        return 'notfound';
-        """ % json.dumps(day_str)
-        r = ld_inst.eval(js)
-        if r != 'found':
-            return r
-        pos = ld_inst.eval("window.__lt")
-        if not pos:
-            return 'no-pos'
-        for typ in ("mouseMoved", "mousePressed", "mouseReleased"):
-            ld_inst._send("Input.dispatchMouseEvent",
-                          {"type": typ, "x": pos["x"], "y": pos["y"],
-                           "button": "left", "clickCount": 1, "modifiers": 0}, timeout=10)
-        time.sleep(0.3)
-        return 'clicked'
+      }
+      return null;
+    })();
+    """
+    rect = ld_inst.eval(js)
+    if not (rect and isinstance(rect, dict)):
+        print("[自定义] 找不到「自定义时间」入口", flush=True)
+        return False
+    ld_inst._click_at(rect["x"], rect["y"])
+    return True
 
-    r1 = click_day(start)
-    time.sleep(0.9)
-    r2 = click_day(end)
-    time.sleep(0.9)
-    try:
-        ld_inst.click_text("确定")
-    except Exception:
-        print("[自定义] 未找到「确定」按钮", flush=True)
-    time.sleep(1.5)
-    print(f"[自定义] 周期 {start} ~ {end}（开始:{r1} 结束:{r2}）", flush=True)
+
+def _find_date_cell(ld_inst, year, month, day):
+    """在已打开的双月日历中定位指定月份+日期的坐标（排除 prev/next 月日格）。"""
+    label = f"{year}年{month}月"
+    js = (
+        "return (function(){"
+        "var label=" + json.dumps(label) + ";"
+        "var day=" + str(day) + ";"
+        "function cls(e){ return e.getAttribute ? (e.getAttribute('class')||'') : ''; }"
+        "var views=[].slice.call(document.querySelectorAll('.byted-date-view'));"
+        "for(var v=0;v<views.length;v++){"
+        "  var view=views[v];"
+        "  var header=(view.querySelector('.byted-date-nav-center')||view.querySelector('.byted-date-nav')).textContent||'';"
+        "  if(header.replace(/\\s+/g,'').indexOf(label.replace(/\\s+/g,''))>=0){"
+        "    var cells=[].slice.call(view.querySelectorAll('.byted-date-item'));"
+        "    for(var i=0;i<cells.length;i++){"
+        "      var e=cells[i];"
+        "      var c=cls(e);"
+        "      if((e.textContent||'').trim()===String(day) && c.indexOf('byted-date-grid-prev')<0 && c.indexOf('byted-date-grid-next')<0){"
+        "        var r=e.getBoundingClientRect();"
+        "        return {x:r.x+r.width/2, y:r.y+r.height/2, cls:c};"
+        "      }"
+        "    }"
+        "  }"
+        "}"
+        "return null;"
+        "})();"
+    )
+    return ld_inst.eval(js)
+
+
+def _click_date(ld_inst, year, month, day):
+    pos = _find_date_cell(ld_inst, year, month, day)
+    if not pos:
+        return 'notfound'
+    ld_inst._click_at(pos["x"], pos["y"])
+    return 'clicked'
+
+
+def _ensure_month_visible(ld_inst, year, month, max_steps=30):
+    """翻动双月日历直到目标月份出现在任一面板中。
+    2026-08-21：新版林客箭头/标题的点击事件较特殊，目前优先靠 URL startDate/endDate
+    设置周期；此函数作为日历兜底。"""
+    label = f"{year}年{month}月"
+    js_check = (
+        "return (function(){"
+        "var label=" + json.dumps(label) + ";"
+        "var views=[].slice.call(document.querySelectorAll('.byted-date-view'));"
+        "var headers=views.map(function(v){"
+        "  var h=v.querySelector('.byted-date-nav-center')||v.querySelector('.byted-date-nav');"
+        "  return (h?h.textContent:'').replace(/\\s+/g,'');"
+        "});"
+        "return headers.some(function(h){ return h.indexOf(label.replace(/\\s+/g,''))>=0; });"
+        "})();"
+    )
+    for _ in range(max_steps):
+        found = ld_inst.eval(js_check)
+        if found:
+            return True
+        # 历史月份需要回退：先点左面板单月回退箭头，再尝试点标题
+        nav_js = r"""
+        return (function(){
+          var leftView=document.querySelector('.byted-date-view');
+          if(!leftView) return 'no-view';
+          var arrow=leftView.querySelector('.byted-date-nav-prev .byted-icon-left');
+          if(arrow){ arrow.parentElement.click(); return 'clicked-arrow'; }
+          var title=leftView.querySelector('.byted-date-title');
+          if(title){ title.click(); return 'clicked-title'; }
+          return 'no-control';
+        })();
+        """
+        res = ld_inst.eval(nav_js)
+        if res == "no-view":
+            return False
+        time.sleep(0.7)
+    return False
+
+
+def set_custom_period(ld_inst, start, end):
+    """新版林客商家数据页「自定义时间」统计周期（2026-08-21 适配）。
+    start/end 形如 '2026-07-01' / '2026-07-31'。best-effort，返回 (start_res, end_res)。"""
+    y1, m1, d1 = map(int, start.split('-'))
+    y2, m2, d2 = map(int, end.split('-'))
+
+    # 兜底 1：打开自定义时间弹层
+    if not _click_custom_time(ld_inst):
+        return (None, None)
+    time.sleep(2.2)
+
+    # 兜底 2：确保月份可见
+    if not _ensure_month_visible(ld_inst, y1, m1):
+        print(f"[自定义] 无法定位开始月份 {y1}-{m1:02d}", flush=True)
+        return ("month-not-found", "month-not-found")
+    if (y2, m2) != (y1, m1):
+        _ensure_month_visible(ld_inst, y2, m2)
+
+    r1 = _click_date(ld_inst, y1, m1, d1)
+    time.sleep(0.6)
+    r2 = _click_date(ld_inst, y2, m2, d2)
+    time.sleep(0.8)
+
+    # 关闭弹层让选中生效
+    ld_inst.eval("document.body.click();")
+    time.sleep(0.6)
+
+    preview = _read_preview(ld_inst)
+    ok = preview and start in preview and end in preview
+    print(f"[自定义] 周期 {start} ~ {end}（开始:{r1} 结束:{r2}）预览={preview} 验证={'OK' if ok else 'FAIL'}", flush=True)
     return (r1, r2)
 
 
 def navigate(ld_inst, tab, period, start=None, end=None):
     """导航到 商家数据→商家列表，设时间（预设或自定义），切子 tab。
-    2026-08-21 修正：新版林客首页把内容放在 iframe/summon 里，
-    直接跳转到商家数据 SPA 路由，避免从首页点击菜单找不到表头。"""
+    2026-08-21 修正：
+      - 新版林客首页把内容放在 iframe/summon 里，直接跳转到商家数据 SPA 路由。
+      - 自定义周期优先通过 URL startDate/endDate 设置（生意经同款参数名），
+        若页面未生效再用双月日历兜底。"""
     target_url = "https://www.life-partner.cn/subapp/dp-life-service-provider-pro/businessData?from_page=merchant_operation"
+    if start and end:
+        target_url += f"&startDate={start}&endDate={end}"
+
     current = ld_inst.eval("return window.location.href") or ""
-    if "businessData" not in current:
+    need_nav = "businessData" not in current
+    if start and end:
+        need_nav = need_nav or f"startDate={start}" not in current or f"endDate={end}" not in current
+
+    if need_nav:
         ld_inst.eval(f"window.location.href = {json.dumps(target_url)}")
         print(f"[导航] 跳转至商家数据页：{target_url}", flush=True)
-        time.sleep(3.5)
+        time.sleep(4.0)
     else:
         print(f"[导航] 已在商家数据页：{current}", flush=True)
 
     # 1) 顶部 Tab 商家列表
     ld_inst.click_text("商家列表")
     time.sleep(1.5)
-    # 2) 时间：自定义周期 或 预设
+
+    # 2) 时间：自定义周期优先 URL 参数；未生效再用日历兜底
     if start and end:
-        set_custom_period(ld_inst, start, end)
+        preview = _read_preview(ld_inst)
+        if preview and start in preview and end in preview:
+            print(f"[导航] URL 参数已生效，周期={preview}", flush=True)
+        else:
+            print("[导航] URL 参数未生效，使用日历兜底", flush=True)
+            set_custom_period(ld_inst, start, end)
     else:
         ld_inst.click_text(period)
         time.sleep(1.5)
+
     # 3) 子 tab（全部商家 等）
     ld_inst.click_text(tab)
     time.sleep(1.5)
@@ -443,9 +574,15 @@ def main():
     goto_page1(ld_inst)
     time.sleep(1.0)
 
-    # 2026-08-21 修正：优先把每页条数调到 50，减少翻页次数，降低翻页失败概率
-    print("[分页] 尝试设置每页 50 条...", flush=True)
-    set_page_size(ld_inst, 50)
+    # 2026-08-21 修正：优先把每页条数调到 100（或 50），尽量一页抓全 84 家，降低翻页失败概率
+    page_size_ok = False
+    for size in (100, 50):
+        print(f"[分页] 尝试设置每页 {size} 条...", flush=True)
+        if set_page_size(ld_inst, size):
+            page_size_ok = True
+            break
+    if not page_size_ok:
+        print("[分页] 无法切换每页条数，将保持 10 条/页并尝试翻页", flush=True)
 
     rows, total = harvest_all_pages(ld_inst, max_pages=args.max_pages)
     print(f"[汇总] 采集 {len(rows)} 行（声明总数 {total}）", flush=True)
