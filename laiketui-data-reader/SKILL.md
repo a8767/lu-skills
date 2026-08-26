@@ -1,7 +1,7 @@
 ---
 name: laiketui-data-reader
 description: 读取抖音来客（life.douyin.com 商家后台）及其「生意经」数据中心（life-data.cn）的经营数据，支持门店管理员账号在多客户间切换读取。覆盖经营概览、流量（直播/视频/搜索）、内容分析、人群资产、团购、订单、达人分账、评价。通过浏览器自动化复用用户真实登录态，登录后抓取指标并导出为 CSV/Excel/复盘报告。支持周/月/季/年四维度复盘（统计/对比/趋势/目标完成度）。当用户要查来客后台数据、导出团购/核销明细、看经营看板、做本地生活经营复盘/周报/月报/季报/年报取数时使用。
-version: 1.4.1
+version: 1.5.0
 agent_created: true
 display_name: "来客后台数据读取"
 display_name_en: "Laiketui Data Reader"
@@ -10,7 +10,7 @@ description_en: "Read Douyin Laiketui merchant backend & 生意经 (life-data.cn
 visibility: "private"
 ---
 
-# 抖音来客后台数据读取（Laiketui Data Reader）v1.4.1
+# 抖音来客后台数据读取（Laiketui Data Reader）v1.5.0
 
 ## 用途
 通过浏览器自动化读取「抖音来客」商家后台及其「生意经」数据中心的经营数据，把抓取到的指标整理成 CSV/Excel/**多维度复盘报告**。
@@ -295,11 +295,41 @@ python tools/extract_daiyunying.py --tab 全部商家 --period 近7天
 
 **典型输出列**（CSV 标准键）：`merchant_name / merchant_id / industry / cooperation_mode / category / business_score / pay_gmv / verified_gmv / refund_gmv / verified_medical_gmv / live_pay_gmv / total_est_commission / provider_est_commission` + 衍生 `_yuan`/`_num`/`verify_rate`/`refund_rate`/`promotion_cost_yuan`。
 
+> ⚠️ **历史月份请用 4.8 的 API 直连，不要走本脚本的日历翻月**：林客双月日历翻月对自动化完全失灵（2026-08-21 实测），历史补齐请改用 `tools/fetch_list_panel.py` + `build_history_snapshots.py`（见 4.8）。本 DOM 脚本（`extract_daiyunying.py`）仅适合**当前周期单页实时拉取**。
+
 **已知踩坑 / 首次跑建议**：
 - 必跑一次并把 `.json` 备份打开看 `headers`，确认 `provider_est_commission` 是否抓到（部分版本列在水平滚动区右侧）。
 - 时间口径：「近1个月」≠ 自然月，跨月对比务必用 `--period natural --y1 --m1 ... --y2 --m2 ...` 显式锁定。
 - 商家总数 > 100 时脚本会跑较久（每页 ~0.6s + 网络延迟），请勿中途重启 Edge。
 - 完整字段定义、衍生公式、与生意经复盘的关系见 `references/modules.md` 第 9 节。
+
+### 4.8 林客商家数据 API 直连取数（优化链路 / 推荐首选，2026-08-21）
+
+> **这是补齐历史月份 / 全月聚合的**首选**链路**，已取代「日历翻月 + DOM 抓取」做历史场景。
+
+**为什么（实测结论）**：林客商家数据页「自定义时间」双月日历的翻月箭头 / 标题 / 年月 span 对自动化**完全无响应**（真实鼠标 + JS click 均实测失效），故走 UI 翻月补齐历史月份不可行。改而**页面内 `fetch` 直连真实接口**，参数直接带 `start_date/end_date`，**彻底绕过日历**，数据仍来自林客真实会话（页面 cookie），等价补齐任意月份。
+
+**权威实现（single source of truth）**：`tools/fetch_list_panel.py`
+- `fetch_merchants(ld_inst, start, end)` → 拉全量月份 + 用当月 17~23 日窗口补经营分，返回归一化记录列表。
+- `transform(rec, score_override)` / `build_month_snapshot(list, ym, start, end)` 等可单独复用。
+- 参数化 `account_id` / `ac_app`（默认值为本代运营账号），跨账号即用参数覆盖。
+- 接口：`POST /data/life_partner/center/merchant/v3/list_panel?ac_app=10159&accountId=<ID>`，`fetch(..., {credentials:'include'})` 复用 cookie、**无需 CSRF token**。
+
+**历史快照编排**：`tools/build_history_snapshots.py`
+```bash
+# 补齐 2026-01~08 月度快照（写 <history-dir>/{yyyy-MM}.json + list.json）
+python tools/build_history_snapshots.py --history-dir <dir> --months 2026-01..2026-08
+# 截至当月
+python tools/build_history_snapshots.py --history-dir <dir> --months all
+```
+
+**完整链路规范（接口/参数/响应形状/字段映射/经营分补分/快照机制/与 DOM 抓取关系）**见 **`references/data-pipeline.md`**。
+
+> **自动同步机制（无需手动干预）**：
+> - `fetch_list_panel.py` 是取数链路**唯一实现**，含 `PIPELINE_VERSION` 与 `SPEC` 常量。
+> - `references/data-pipeline.md` 由 `tools/sync_skill_pipeline.py` **自动生成**（从 `SPEC` 渲染），**禁止手工编辑**——改链路只改 `fetch_list_panel.py`，再跑同步脚本（或由每日自动化「林客数据链路自动同步」自动跑）。
+> - 各项目（如 personal-workbench 的 `data/_build_history.py`）**直接 `import fetch_list_panel`**，运行时自动跟随 skill 最新版本，无需复制/手动同步代码。
+> → skill 内部逻辑始终反映最新链路设计。
 
 ### 5. 收尾
 - 多客户：回到商户选择弹窗 → 选下一家 → 重复步骤 2–4.5（**不要重启 Chrome**，保持登录态）。

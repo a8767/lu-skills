@@ -27,3 +27,5 @@ laiketui-data-reader/tools/*.html
 # 代运营月度报表导出（含真实商家名称/GMV/佣金等经营数据，按月份生成，不入库）
 laiketui-data-reader/代运营_*.csv
 laiketui-data-reader/代运营_*.json
+# 林客 API 直连管线运行时同步日志（每次运行追加时间戳，非技能正文，不入库）
+laiketui-data-reader/tools/_pipeline_sync.log
