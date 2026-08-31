@@ -125,7 +125,18 @@ class CDP:
         return self.send("Page.navigate", {"url": url}, timeout=20)
 
     def evaluate(self, expr, timeout=20):
-        code = f"(function(){{ {expr} }})()"
+        # 双策略包装 expr:
+        # 1. 先 try eval(expr) → 走"最后表达式"路径（简单表达式/var;expr）
+        # 2. catch 后 try new Function IIFE → 走"return"路径（_rect_center 类含 return）
+        # 这样既兼容 _rect_center 这种含 return 的内部辅助代码，又兼容简单表达式
+        js_body = (
+            "try { return eval(arguments[0]); }"
+            "catch(e1) {"
+            "  try { return (new Function('return (function(){' + JSON.stringify(arguments[0]).slice(1,-1) + '})()'))(); }"
+            "  catch(e2) { return void 0; }"
+            "}"
+        )
+        code = "(function(){" + js_body + "}).call(null, " + json.dumps(expr) + ")"
         res = self.send("Runtime.evaluate",
                         {"expression": code, "returnByValue": True,
                          "awaitPromise": True}, timeout=timeout)
