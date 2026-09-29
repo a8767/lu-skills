@@ -1,12 +1,14 @@
-# workbuddy-skills
+# lu-skills
 
-WorkBuddy 用户级技能仓库（自动备份镜像）。
+个人 skills 备份仓库。仓库当前为公开状态，请勿提交真实 API key、访问令牌、个人数据或其他不适合公开的信息。
 
-## 说明
-- 由本地每日自动化（11:00）自动维护：`git commit` + 打包 `tar.gz` + `git push`，**请勿手动编辑**，以免与本地提交产生冲突。
-- 内容：用户级技能（`~/.workbuddy/skills`），含技能市场安装技能与自定义技能。
-- 凭据（如 API token）已排除，不会进入本仓库；敏感文件由 `.gitignore` 及打包排除规则屏蔽。
-- 本仓库为**私有**，仅供本人同步备份使用。
+## 内容
 
-## 恢复
-本仓库是本地 `~/.workbuddy/skills` 的镜像。如需恢复，克隆本仓库或拷贝其 `.git` 目录到本地对应位置即可。
+- 根目录中原有技能文件夹：保留已有的 WorkBuddy 技能备份，本次同步未删除或覆盖。
+- [`codex-skills/`](./codex-skills/)：2026-09-29 从 Codex 用户级技能目录整理的 68 个独立 skills，附安装说明和名单。
+
+## 恢复 Codex skills
+
+将 `codex-skills/` 下的技能文件夹复制到 `%USERPROFILE%\.agents\skills\` 或 `%USERPROFILE%\.codex\skills\`。详细步骤见 [codex-skills/README.md](./codex-skills/README.md)。
+
+已清理两处安装目录间完全相同的副本、Python 缓存、旧备份和评测夹具。原有 WorkBuddy 技能备份保留；若技能仅名称相同但实现不同，则分开保存在原有目录和 `codex-skills/` 中。
