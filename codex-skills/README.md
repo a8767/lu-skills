@@ -33,7 +33,7 @@ Get-ChildItem .\codex-skills -Directory | Copy-Item -Destination "$env:USERPROFI
 保留技能文件夹结构，以及技能依赖的脚本、参考文档和资源。不要复制内置技能、缓存、评测夹具或 .env 文件。复制前检查目标目录是否已有同名技能；不要直接覆盖，先列出冲突并等我决定。完成后核对每个技能的 SKILL.md 和资源文件，报告复制的技能名称、目标路径及冲突或失败项。
 ```
 
-如果要装进 Codex 的另一种用户级目录，也可以把目标路径改为 `%USERPROFILE%\\.codex\\skills\\` 或 `~/.codex/skills/`。
+如要使用 `.codex/skills/` 目录，把上面目标路径中的 `.agents` 换成 `.codex` 即可。
 
 ## 清理规则
 
