@@ -19,6 +19,22 @@ New-Item -ItemType Directory -Force "$env:USERPROFILE\.agents\skills" | Out-Null
 Get-ChildItem .\codex-skills -Directory | Copy-Item -Destination "$env:USERPROFILE\.agents\skills" -Recurse -Force
 ```
 
+## 复制 skills 到本地的提示词
+
+下面这段提示词可直接交给 Codex，用于把指定技能或全部技能复制到当前电脑：
+
+```text
+请从 GitHub 仓库 https://github.com/a8767/lu-skills 的 codex-skills/ 目录，把【填写 skill 名称；如需全部则写“全部”】复制到本机 Codex 用户级技能目录。
+
+根据当前系统选择目标目录：
+- Windows：%USERPROFILE%\.agents\skills\
+- macOS/Linux：~/.agents/skills/
+
+保留技能文件夹结构，以及技能依赖的脚本、参考文档和资源。不要复制内置技能、缓存、评测夹具或 .env 文件。复制前检查目标目录是否已有同名技能；不要直接覆盖，先列出冲突并等我决定。完成后核对每个技能的 SKILL.md 和资源文件，报告复制的技能名称、目标路径及冲突或失败项。
+```
+
+如果要装进 Codex 的另一种用户级目录，也可以把目标路径改为 `%USERPROFILE%\\.codex\\skills\\` 或 `~/.codex/skills/`。
+
 ## 清理规则
 
 - 只收录个人级技能；内置 `.system` 与插件缓存不复制。
