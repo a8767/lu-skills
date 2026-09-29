@@ -5,7 +5,7 @@
 ## 内容
 
 - 根目录中原有技能文件夹：保留已有的 WorkBuddy 技能备份，本次同步未删除或覆盖。
-- [`codex-skills/`](./codex-skills/)：2026-09-29 从 Codex 用户级技能目录整理的 68 个独立 skills，附安装说明和名单。
+- [`codex-skills/`](./codex-skills/)：2026-09-29 从 Codex 用户级技能目录整理的 68 个顶层文件夹、74 个 `SKILL.md` manifest，附完整名单与安装说明。
 
 ## 恢复 Codex skills
 
