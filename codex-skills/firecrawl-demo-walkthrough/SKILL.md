@@ -29,6 +29,8 @@ Use Firecrawl browser to open the product and navigate key flows. Snapshot at ea
 
 Do not submit real credentials, purchases, or irreversible actions unless the user explicitly instructs and has permission.
 
+If a page fails to load, a control is blocked, or a flow requires unavailable credentials, record the URL, attempted step, and observed error, then stop that path. Do not guess a destination or repeat a potentially state-changing action. Continue with other accessible flows or public documentation when useful, and label the walkthrough coverage as incomplete.
+
 ## Parallel Work
 
 If appropriate, use sub-agents or equivalent parallel task runners:

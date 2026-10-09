@@ -42,6 +42,8 @@ Capture visible or legitimately accessible fields:
 - industry, company size, funding stage
 - notes and profile URL
 
+Treat the requested lead count as a target maximum: return fewer records if fewer leads meet the criteria. Keep missing personal contact fields blank; do not guess them or send outreach. This skill produces a sourced lead list only.
+
 ## Final Deliverable
 
 ```markdown

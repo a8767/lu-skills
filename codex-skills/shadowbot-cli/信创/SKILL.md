@@ -9,6 +9,7 @@ Use `shadowbot-cli` as the only interface to the local ShadowBot desktop client.
 
 ## Runtime rules
 
+- Confirm from host/runtime metadata that this is the 信创-compatible environment before invoking the CLI; do not infer compatibility from the executable name or Linux alone. On ordinary Windows, stop and use `shadowbot-cli-windows`. If the environment cannot be verified, stop and ask rather than probing with this CLI.
 - Confirm the executable is available with `command -v shadowbot-cli` before the first operation. If it is unavailable, report that it is not on `PATH`; do not guess an installation path.
 - Execute only commands supported by the installed binary. Never invent command names, flags, IDs, credentials, or input values.
 - Commands return JSON. Read the command result and preserve non-sensitive identifiers needed by a later command.

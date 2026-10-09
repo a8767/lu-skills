@@ -96,6 +96,7 @@ The cap applies to each PDF, not the whole command or total credits. Extra forma
 
 ## Tips
 
+- An empty first scrape is inconclusive. Check the response and errors; try a render wait such as `--wait-for` for JavaScript content, use `firecrawl interact` when interaction or pagination is needed, and discover a provider tool only when the page/task calls for structured data. If those paths still fail, report the specific failure and missing evidence instead of returning an unsupported empty result or inventing fields.
 - **Prefer plain scrape over `--query`.** Scrape to a file, then use `grep`, `head`, or read the markdown directly — you can search and reason over the full content yourself. Use `--query` only when you want a single targeted answer without saving the page (costs 5 extra credits).
 - **Scrape handles static pages and JS-rendered SPAs.** Escalate to `interact` when the page needs interaction (clicks, form fills, pagination) or scrape misses content.
 - Multiple URLs are scraped concurrently — check `firecrawl --status` for your concurrency limit. This mode saves markdown only and ignores `-o`; other requested formats are dropped. If markdown wasn't requested, the whole JSON response is written into the `.md` file.

@@ -54,6 +54,7 @@ Only the HTTP surface takes these. On `GET`, pass `types=issue,pull_request` or 
 ## Principles
 
 - **Quote the passage, cite the `url`.** The passages are the evidence; hand them over rather than paraphrasing them into a claim the reader can't check. `title` is frequently absent on `doc` results — fall back to `url`.
+- **Bound negative findings to the index.** No matches mean only that nothing matched in the indexed corpus under the query and filters at search time; never claim that GitHub has no discussion. Report the searched scope and echoed `indexed` flags, then use the web when the user needs broader coverage.
 - **A merge supersedes a report.** When an issue and a pull request disagree, the merged pull request is the current behaviour. Say which one you read.
 - **Scope last, not first.** Search the whole index, then narrow with `types`, `repos`, or `sources` once you know what the hits look like. Scoping first hides the result that would have told you where to look.
 - **Go to the web when the index has nothing to say.** Trade-offs, ecosystem opinion, and anything about an unindexed project are web questions. Don't force them through the index, and don't dress a general web page up as a primary source.

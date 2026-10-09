@@ -116,9 +116,10 @@ frontmatter 触发词、花叔生态内部 skill 名引用、明确标注 runtim
 1. 确认优化范围：
    - 全部 skills → 由当前运行时列出的已安装技能和已配置技能根目录发现；不要假定 `.claude/skills/` 存在
    - 指定skills → 用户指定列表
-2. 创建 git 分支：auto-optimize/YYYYMMDD-HHMM
-3. 初始化 results.tsv（如不存在）
-4. 读取现有 results.tsv 了解历史优化记录
+2. 检查每个目标根的 `git status`，并为每个目标文件保留精确的回滚基线（提交或不可变副本），记录并验证 SHA-256。工作树有未提交改动或目标在仓库外时，不得把 `HEAD` 当作完整基线；先用隔离 worktree/文件副本保留当前内容，无法隔离则停下询问。
+3. 创建 git 分支：auto-optimize/YYYYMMDD-HHMM
+4. 初始化 results.tsv（如不存在）
+5. 读取现有 results.tsv 了解历史优化记录
 ```
 
 ### Phase 0.5: 测试Prompt设计
@@ -139,6 +140,8 @@ for each skill:
 ```
 
 展示所有测试prompt给用户，**确认后再进入评估**。测试prompt的质量决定了优化方向是否正确。
+
+尊重用户明确指定的轮数；用户要求单轮时设 `MAX_ROUNDS=1`，只提出并评估一个改动，然后停在用户确认检查点。
 
 ### Phase 1: 基线评估（Baseline）— triage 用途
 

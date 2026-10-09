@@ -43,6 +43,7 @@ Do not ask the user to operate the models. The agent owns generation, saving, in
 - Identify the project root and create a new output folder without overwriting unrelated user files.
 - Check file writing, terminal, Python 3, Node.js, npm, ffmpeg, ffprobe, image2.0, and Seedance 2.0 capabilities.
 - Collect the product source, reference webpage/video, desired effect notes, logo or brand assets, audience, CTA, and local-versus-public delivery intent.
+- A reference site is design evidence, not permission to reuse its code or assets. Extract general visual and interaction patterns; reuse source code, text, logos, or media only when the user confirms ownership/permission or a clear license allows it. If permission is unclear, use original or authorized assets and keep the result local; publishing still requires an explicit request.
 - Default to local delivery. Publishing requires an explicit user request.
 - Read [runtime-compatibility.md](references/runtime-compatibility.md) for capability fallbacks.
 - Copy `assets/document-templates/project-intake.md` and complete it as `00-project-intake.md`.

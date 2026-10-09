@@ -95,6 +95,12 @@ python scripts/apimart_image_gen.py generate \
 - Prefer putting aspect ratio in `--size`, not in the prompt, to avoid conflicting instructions.
 - Result URLs should be downloaded promptly because APIMart reports an `expires_at` timestamp.
 
+## Failure And Recovery
+
+- If `APIMART_API_KEY` / `APIMART_TOKEN` is missing, report the missing environment variable; do not ask the user to paste a secret into chat.
+- For HTTP errors or a `failed` / `cancelled` task, report the status and returned error message, then follow `references/api.md`. Do not silently submit a duplicate job.
+- If polling reaches its timeout before a terminal state, return the task ID and last observed status, then stop polling. Download completed result URLs promptly because they expire.
+
 ## Reference
 
 Read `references/api.md` when you need endpoint details, status values, error handling, or the size/resolution map.

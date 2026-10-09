@@ -35,6 +35,8 @@ Use Firecrawl browser to:
 
 Try Firecrawl map as a supplement for public URLs, but use browser navigation for auth-gated or JS-heavy content.
 
+Honor `max_pages` as a hard ceiling. If no page limit is supplied, keep the crawl within the named portal/section rather than expanding to the whole site. Report extracted, failed/restricted, and unvisited pages within that scope; do not claim complete coverage when the limit or access blocks leave pages unread.
+
 ## Final Deliverable
 
 ```markdown

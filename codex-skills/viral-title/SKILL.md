@@ -9,7 +9,7 @@ description: Generate high-potential viral title candidates for content across W
 
 Use this skill to generate and select viral title candidates. The current version implements Phase 1 universal methodology, WeChat public-account title reuse, X/Twitter hook generation, YouTube title-thumbnail packaging, Bilibili title-cover-tag packaging, and a lightweight evolution loop.
 
-Phase 1 must generate 30 titles: 10 universal formulas x 3 variants per formula. Then score the candidates and recommend the single best title.
+By default, Phase 1 generates 30 titles: 10 universal formulas x 3 variants per formula. If the user specifies a count, generate exactly that many candidates, distributing them across the formulas as needed. Then score the candidates and recommend the single best title unless the user asks for a different output.
 
 ## Workflow
 
@@ -23,8 +23,8 @@ Phase 1 must generate 30 titles: 10 universal formulas x 3 variants per formula.
 3. Read `references/phase1-universal-methodology.md`.
 4. If the user names a platform, load the matching platform reference from `references/platforms/`.
 5. Read `references/evolution/promoted-rules.md` and `references/evolution/anti-patterns.md`.
-6. Generate exactly 3 titles for each of the 10 Phase 1 formulas.
-7. If a platform reference is implemented, generate platform-tuned candidates after the universal batch when the user asks for platform-specific titles.
+6. Generate 3 titles for each of the 10 Phase 1 formulas when using the default 30-title batch; when the user gives a count, generate exactly that count across the formulas.
+7. If the user asks for platform-specific titles, tune candidates to that platform within the requested total count; do not append an extra batch unless the user asks for one.
 8. If the user asks to reuse proven titles or says "套用标题库", retrieve relevant examples instead of loading full libraries.
 9. Score the candidate pool with the Phase 1 scoring rubric plus any platform-specific rules.
 10. Select one best title and briefly explain why.
@@ -131,8 +131,9 @@ Use this structure:
 
 ## Quality Rules
 
-- Generate exactly 30 Phase 1 candidates unless the user explicitly asks for fewer.
-- Each formula must contribute exactly 3 titles.
+- Generate 30 Phase 1 candidates by default. If the user specifies a count, return exactly that count.
+- In the default 30-title batch, each formula contributes 3 titles; for a user-specified count, distribute candidates across formulas without forcing 3 per formula.
+- Count universal and platform-tuned titles together; never exceed an explicit user count unless they request a separate additional batch.
 - Do not fabricate unsupported facts, names, numbers, or results.
 - Prefer concrete nouns, visible stakes, and reader-facing benefits over abstract claims.
 - Keep titles platform-neutral in Phase 1. Do not overfit to WeChat, X, YouTube, or Bilibili unless the user asks.

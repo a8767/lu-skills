@@ -80,15 +80,9 @@ This generates the following structure in the current project:
     plans/                         # (populated by planner)
 ```
 
-### Step 4: Configure Hooks
+### Step 4: Verify Hook Configuration
 
-After generating files, merge hook configuration into the project's `.claude/settings.json` (or create it):
-
-```bash
-python3 {{SKILL_PATH}}/scripts/merge_settings.py --target-dir "<CURRENT_PROJECT_DIR>"
-```
-
-This adds hook definitions without overwriting existing settings.
+`scaffold.py` already merges the hook configuration into `.claude/settings.json` during Step 3, without replacing existing settings. Do not call a separate `merge_settings.py` script; it is not included in this skill. If scaffolding reports an error, inspect the target settings file and report what was and was not created before retrying.
 
 ### Step 5: Verify Installation
 

@@ -9,6 +9,7 @@ Use `shadowbot-cli` as the only interface to the local ShadowBot desktop client.
 
 ## Runtime rules
 
+- Confirm the host is macOS before running any command. On Windows or Linux, stop and use the applicable platform-specific skill; do not try this CLI or borrow commands from the Windows implementation.
 - Confirm the executable is available with `command -v shadowbot-cli` before the first operation. If it is unavailable, report that it is not on `PATH`; do not guess an installation path.
 - Execute only commands supported by the installed binary. Never invent command names, flags, IDs, credentials, or input values.
 - Commands return JSON. Read the command result and preserve non-sensitive identifiers needed by a later command.

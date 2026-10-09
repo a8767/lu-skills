@@ -102,6 +102,9 @@ Target source types:
 
 Principles:
 
+- State whether each source was read as full text or abstract only; do not present abstract-only or inaccessible papers as full-text verified.
+- Verify requested page numbers, tables, and statistics against accessible full text. If the full text is unavailable, say so instead of inferring exact details.
+- For clinical or public-health questions, synthesize research evidence and uncertainty without turning it into an individualized diagnosis or treatment recommendation.
 - When in doubt, include the relevant paper family rather than only the single
   best result.
 - Use related-paper expansion to avoid stopping at one strong hit.

@@ -75,8 +75,9 @@ Use for requests like: "帮我打开影刀并执行CLI程序，并告诉我输�
 ### Run App
 1. `powershell -NoProfile -ExecutionPolicy Bypass -Command "shadowbot.shell-cli.exe console app"`
 2. From list output, locate target app and extract `<app_id>`.
-3. `powershell -NoProfile -ExecutionPolicy Bypass -Command "shadowbot.shell-cli.exe console task run --app-id <app_id>"`
-4. Capture returned `<task_id>` from run result for follow-up status/logs/stop actions.
+3. The user must identify the intended app, and the match must be unique. If the target is unspecified or multiple apps match, stop and ask; never choose the first, most recent, random, or another production app. Listing apps does not authorize running one.
+4. `powershell -NoProfile -ExecutionPolicy Bypass -Command "shadowbot.shell-cli.exe console task run --app-id <app_id>"`
+5. Capture returned `<task_id>` from run result for follow-up status/logs/stop actions.
 
 ### Stop App
 1. Use known `<task_id>` from previous `console task run` result when available.

@@ -51,6 +51,8 @@ If appropriate, use sub-agents or equivalent parallel task runners:
 - Training: scraped source files plus `training-data.jsonl` and `training-metadata.json`.
 - Docs mirror: complete markdown mirror with a table of contents.
 
+Before producing training data, confirm that the user has authorized these sources for that purpose. Do not place personal, sensitive, or confidential information in a public dataset by default; exclude or redact it. If the permitted use or redaction scope is unclear, pause training-data export and ask. Use a private reference/RAG output only when that use is authorized.
+
 ## Final Deliverable
 
 ```markdown

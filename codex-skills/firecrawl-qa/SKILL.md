@@ -27,6 +27,10 @@ Ask at most 1-3 concise questions only if blocked, such as the URL, the focus ar
 
 Use Firecrawl map to discover pages. Use Firecrawl browser for interactions, forms, navigation, and responsive/manual checks when available. Use scrape for page content and link extraction.
 
+## Test Data And Side Effects
+
+Prefer staging environments and designated test accounts/data. Treat page reads and navigation as the default; do not submit production forms, send SMS/email, purchase, or change account/site state unless the user explicitly authorizes that specific test action and target. Record blocked or unauthorized cases as untested instead of attempting them.
+
 ## Parallel Work
 
 If appropriate, use sub-agents or equivalent parallel task runners:

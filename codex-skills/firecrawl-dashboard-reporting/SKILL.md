@@ -35,6 +35,8 @@ Use Firecrawl browser for authenticated dashboards and UI interaction:
 
 If login has expired, ask the user to re-authenticate rather than attempting to bypass access controls.
 
+If a metric or chart cannot be read precisely, mark it unavailable and state the affected dashboard/period. Do not estimate from a chart image, substitute an external benchmark, or reuse an older value as if current; continue with other readable metrics and note the gap.
+
 ## Parallel Work
 
 If appropriate, use sub-agents or equivalent parallel task runners. Split by dashboard platform or metric category. Each researcher should return metrics, units, period, source URL, and caveats.

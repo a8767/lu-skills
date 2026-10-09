@@ -26,7 +26,7 @@ Define `topic_id` as the canonical SHA-256 described in [exploration.md](referen
 - If the user has not selected a concept, run **Stage 1: Four concepts**.
 - If the user selects A–D from the latest unresolved Stage 1 run for the current topic, run **Stage 2: Five ratios**. If more than one run could match, ask which run they mean.
 - If the user explicitly supplies an existing selected cover or source layers and asks only for platform adaptation, Stage 2 may start directly.
-- If the selection also asks to modify or mix concepts, first create and QA one revised selected master at the resolved Stage 1 target. After the user-requested revision is resolved, adapt that master to five ratios. A plain `选 C` can proceed directly.
+- If the selection also asks to modify or mix concepts, first create and QA one revised selected master at the resolved Stage 1 target. After the user-requested revision is resolved, apply Stage 2's requested ratio set: only the specified ratio when exactly one is requested, otherwise the five defaults. A plain `选 C` can proceed directly.
 - A selection applies only to the current topic. A new topic starts a new four-concept exploration unless the user explicitly asks to reuse the prior direction.
 
 ## Stage 1: Four concepts
@@ -46,19 +46,22 @@ Read [exploration.md](references/exploration.md), then:
 Read [platform-adaptation.md](references/platform-adaptation.md), then:
 
 1. Lock the selected concept's design identity for this topic only: exact copy, subject, product and Logo, palette family, type character, hierarchy, and layer relationship.
-2. Recompose the design independently at these defaults:
+2. If the user requests exactly one output ratio, produce only that ratio; otherwise use the five defaults below.
+3. Recompose the design independently at these defaults:
    - WeChat 21:9 — 2100×900
    - Bilibili 16:9 — 1920×1080
    - Douyin 9:16 — 1080×1920
    - Landscape 4:3 — 1600×1200
    - Portrait 3:4 — 1200×1600
-3. Preserve all content verbatim. Only line breaks, positions, scale, spacing, crop of non-critical background, and responsive layer arrangement may change.
-4. Never stretch or simply center-crop the selected Stage 1 image. Extend or rebuild the background, reuse the same approved integrated portrait-pet master when possible, and re-render text and Logos at each native size.
-5. Export all five individual covers, a platform contact sheet, thumbnail previews, and a manifest. Run the checks in [qa.md](references/qa.md).
+4. Preserve all content verbatim. Only line breaks, positions, scale, spacing, crop of non-critical background, and responsive layer arrangement may change.
+5. Never stretch or simply center-crop the selected Stage 1 image. Extend or rebuild the background, reuse the same approved integrated portrait-pet master when possible, and re-render text and Logos at each native size.
+6. Export the requested ratio set, a contact sheet, thumbnail previews, and a manifest. Run the checks in [qa.md](references/qa.md).
 
 ## Compositing rule
 
 Use image generation for the scene, atmosphere, texture, compatible background expansion, portrait-expression edit, integrated portrait-pet master, or non-critical illustrations. For the pet master, generate the human and re-posed kangaroo together so paws/body visibly bear weight on the shoulder or hair with real occlusion, contact shadow, material compression, matched perspective, and matched light. The raw IP image is character-reference input only: never crop, key, resize, or paste that source bitmap into a final cover, even if its coordinates happen to be on the shoulder or head. GPT Image 2 is the default generation model when the active image tool exposes that concrete choice. If the tool exposes only native OpenAI image generation without a selectable model name, use that native image generator and explicitly report that the concrete model name was not exposed; never silently switch to another provider or falsely claim GPT Image 2. Use deterministic tools such as Pillow, SVG/HTML rendering, or an equivalent local compositor for exact Chinese text, numbers, punctuation, and real Logos. Do not ask an image model to redraw a supplied Logo or to be the final source of Chinese display copy.
+
+When the user requires pixel-identical face or Logo pixels, keep the original face and Logo as locked, unmodified layers and generate or rebuild only the background. Do not pass those protected pixels through generation, retouching, resizing, warping, or repainting. If the requested pet integration or layout cannot be composited while preserving them exactly, explain the conflict and ask which requirement may change before rendering.
 
 When a specific generation model or workflow is explicitly requested, use it if available and do not silently substitute another provider. Inspect source images before editing them.
 

@@ -138,6 +138,7 @@ If the user asks to implement, first produce or update `DESIGN.md`, then use it 
 ## Quality Bar
 
 - Do not imply the user has rights to third-party logos, images, trademarks, or copy.
+- If asked for an exact third-party replica, extract transferable layout and token patterns only; do not copy logos, images, or distinctive copy. Use neutral placeholders unless the user confirms rights to those assets.
 - Prefer reusable design tokens over one-off observations.
 - Distinguish observed facts from inferred approximations.
 - Keep the output compact enough that another agent can paste it into context and build from it.

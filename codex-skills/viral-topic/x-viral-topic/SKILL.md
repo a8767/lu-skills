@@ -80,6 +80,7 @@ Read `references/scoring.md` before changing thresholds or combining X results w
 ## Guardrails
 
 - Do not treat a post as low-fan if the author follower count is missing unless the user explicitly allows unknown followers.
+- If views or engagement metrics are missing, mark them unavailable and exclude them from thresholds or rankings that require those values; do not infer or substitute zero. Preserve the requested date window and retrieval time.
 - The API can return empty or malformed responses for over-broad queries; narrow the topic and preserve `source_status`.
 - Avoid scraping logged-in browser sessions for X unless the user explicitly asks. The script uses the API path.
 - Use posts as topic signals and hooks; do not copy thread content wholesale.

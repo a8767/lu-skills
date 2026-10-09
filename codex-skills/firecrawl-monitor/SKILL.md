@@ -24,6 +24,8 @@ The first three watch URLs you already have. **Web search** runs your queries ea
 
 ## Quick start
 
+Before `create`, `update`, `run`, or `delete`, verify that the requested monitor target and action are clear. For scheduled checks or notifications, also verify cadence and recipient/webhook destination from the user or current context; ask only for missing or ambiguous details. Never guess a recipient or enable alerts as an unstated default.
+
 ```bash
 # Single page, natural-language schedule, email alert
 firecrawl monitor create --name "Blog" --schedule "every 30 minutes" \

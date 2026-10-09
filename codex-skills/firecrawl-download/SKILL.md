@@ -15,6 +15,8 @@ allowed-tools:
 
 Maps the site origin first to discover pages, then scrapes each one into nested directories under `.firecrawl/`. Use `--include-paths` to scope a non-root URL to one section. Automated runs always pass `-y` — without it the command opens an interactive wizard that blocks on a prompt.
 
+Before using `-y`, resolve `.firecrawl/` under the current working directory and check for existing files that overlap the requested download. If the destination may overwrite prior work, choose an empty task-specific working directory or stop and ask how to handle it; report the destination used.
+
 ## Quick start
 
 ```bash

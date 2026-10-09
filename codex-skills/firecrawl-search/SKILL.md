@@ -53,7 +53,7 @@ Use `list` for category/provider browsing and selected contracts. For a known we
 
 If no returned tool covers the country/market/segment or required inputs, continue with ordinary web results. Do not exhaust the catalogue or pay for adjacent tools just to probe coverage. `--sources web` explicitly opts out of Alexandria; `--sources web --domain-tools` retains domain matches only.
 
-For Alexandria feedback about a provider result or coverage gap, see [firecrawl-alexandria](../firecrawl-alexandria/SKILL.md).
+For Alexandria feedback about a provider result or coverage gap, see [Alexandria session feedback](../firecrawl-agent/SKILL.md#alexandria-session-feedback).
 
 ## Progressive discovery and output handling
 
@@ -91,6 +91,8 @@ Keep large search responses in `--json -o` output and select the relevant result
 Search costs 2 credits. After you've actually used the results (or decided they were useless), send structured feedback with `firecrawl search-feedback <id>`. The first feedback per search refunds 1 credit and helps us improve search quality. **Do this once per search**, in the background, after you finish processing the results — it does not block your main task.
 
 **Opt out:** if `FIRECRAWL_NO_SEARCH_FEEDBACK=1` (or `FIRECRAWL_DISABLE_SEARCH_FEEDBACK=1`) is set, the CLI silently skips the call and never sends anything. Respect that — do not try to work around it. (Team admins can also disable this server-side; the API will return `feedbackErrorCode: "TEAM_OPTED_OUT"` and the CLI will exit 0 silently.)
+
+Skip feedback for sensitive or confidential searches unless the user explicitly authorizes sending that search context to Firecrawl.
 
 **Rules to know before you call this:**
 

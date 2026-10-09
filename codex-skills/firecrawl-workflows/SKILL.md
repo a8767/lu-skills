@@ -37,7 +37,7 @@ Use this when the user wants a finished deliverable powered by Firecrawl, not on
 - Use [firecrawl-demo-walkthrough](../firecrawl-demo-walkthrough/SKILL.md) for product flow walkthroughs and UX teardown reports.
 - Use [firecrawl-shop](../firecrawl-shop/SKILL.md) for product research and shopping recommendations.
 
-If no existing workflow fits, use this generic process and produce a reusable pattern that could become a new skill.
+If no existing workflow fits, use the generic process only after the user's goal and deliverable are clear. Ask first when the request is broad (for example, “look around the web”) or combines unrelated work. Do not start every workflow, invent a deliverable, or create a new skill unless the user asks.
 
 ## Required Intake
 

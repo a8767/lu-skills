@@ -44,9 +44,7 @@ queries Firecrawl's paper index rather than searching websites.
 
 ## Onboarding Interview
 
-Infer the topic and output format from context. Before starting, unless already specified, always ask one short question to define the scope:
-
-> "How long do you want this research task to run?"
+Infer the topic and output format from context, including any explicit time or scope constraints. Default to Thorough for a clear report-scale request. Ask one short question only when a missing runtime or scope choice would materially change source coverage; do not ask a runtime question for a quick lookup that does not need this skill.
 
 Map the answer to a depth tier in the Collection Plan below:
 - A few minutes → Quick

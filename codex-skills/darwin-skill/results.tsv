@@ -1,0 +1,155 @@
+timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
+2026-10-06T17:19:17	baseline	ai-article-daily	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	aihot	-	92	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	apimart-image-gen	-	72	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	book-illustration-workflow	-	85	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	china-ecommerce-analytics	-	84	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	cover-skill	-	91	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	darwin-skill	-	91	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	harness-engineering	-	74	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	hv-analysis	-	65	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	hy-3d-gen	-	80	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	khazix-writer	-	73	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	leader	-	88	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	multi-agent-image	-	81	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	neat-freak	-	96	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	reshape-your-life	-	61	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	scroll-promo-site-builder	-	90	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	shadowbot-cli-windows	-	85	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	shadowbot-cli-macos	-	89	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	shadowbot-cli-xinchuang	-	89	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	shijing-paper-zine	-	85	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	storage-analyzer	-	81	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	storefront-to-brand-system	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	task-harness	-	87	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	twitter-monitor	-	77	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	video-downloader	-	97	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	viral-title	-	76	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	viral-topic	-	88	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	bilibili-viral-topic	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	wechat-viral-topic	-	82	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	x-viral-topic	-	82	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	youtube-viral-topic	-	82	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	browser-skill	-	85	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-aicard	-	89	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-aisearch	-	91	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-aitable	-	87	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-calendar	-	79	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-chat	-	85	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-contact	-	76	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-doc	-	88	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-drive	-	87	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-event	-	86	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-mail	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-minutes	-	88	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-misc	-	76	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-shared	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-tag	-	83	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-todo	-	88	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	dingtalk-wiki	-	89	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl	-	74.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-agent	-	64.5	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-company-directories	-	68.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-competitive-intel	-	56.8	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-crawl	-	73.9	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-dashboard-reporting	-	67.7	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-deep-research	-	78.6	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-demo-walkthrough	-	63.8	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-developer-index	-	85.8	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-download	-	66.9	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-interact	-	72.3	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-knowledge-base	-	58.3	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-knowledge-ingest	-	69.2	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-lead-gen	-	68.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-lead-research	-	65.3	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-map	-	73.9	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-market-research	-	69.2	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-monitor	-	75.5	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-parse	-	73.1	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-qa	-	61.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-research-index	-	86.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-research-papers	-	78.6	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-scrape	-	86.4	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-search	-	80.6	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-seo-audit	-	66.9	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-shop	-	77.8	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-website-design-clone	-	73.1	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	baseline	firecrawl-workflows	-	72.1	baseline	-	static triage; D8 simulated dry_run, not measured	dry_run
+2026-10-06T17:19:17	paired-review	reshape-your-life	61	3-0 better	keep	安全边界	3 independent paired votes better; 移除保证式表述，增加危机与重大决策分支	paired
+2026-10-06T17:19:17	paired-review	hv-analysis	65	3-0 better	keep	故障恢复	3 independent paired votes better; 认证或网络失败时有限重试并报告未核实部分	paired
+2026-10-06T17:19:17	paired-review	apimart-image-gen	72	3-0 better	keep	故障恢复	3 independent paired votes better; 缺少凭证、任务失败和轮询超时有明确停步方式	paired
+2026-10-06T17:19:17	paired-review	harness-engineering	74	3-0 better	keep	操作准确性	3 independent paired votes better; 移除不存在的 merge_settings.py 单独调用，scaffold 已执行合并	paired
+2026-10-06T17:19:17	paired-review	viral-title	76	3-0 better	keep	用户数量约束	3 independent paired votes better; 指定总数时遵循数量且平台标题不额外追加	paired
+2026-10-06T17:19:17	paired-review	storage-analyzer	81	3-0 better	keep	副作用边界	3 independent paired votes better; 区分 Agent 只读分析与用户点击报告按钮	paired
+2026-10-06T17:19:17	paired-review	firecrawl	74.4	3-0 better	keep	引用准确性	3 independent paired votes better; 修复 Alexandria 缺失链接	paired
+2026-10-06T17:19:17	paired-review	firecrawl-agent	64.5	3-0 better	keep	不可信输入	3 independent paired votes better; 页面文本不能覆盖任务或要求披露凭证	paired
+2026-10-06T17:19:17	paired-review	firecrawl-search	80.6	3-0 better	keep	隐私边界	3 independent paired votes better; 修复失效链接并跳过敏感搜索反馈，除非用户授权	paired
+2026-10-06T17:19:17	paired-review	firecrawl-interact	72.3	3-0 better	keep	操作授权	3 independent paired votes better; 外部状态更改需有明确目标与意图	paired
+2026-10-06T17:19:17	paired-review	firecrawl-qa	61.4	3-0 better	keep	测试边界	3 independent paired votes better; 默认测试环境和数据，未授权生产操作记为未测试	paired
+2026-10-06T17:19:17	paired-review	firecrawl-monitor	75.5	3-0 better	keep	操作范围	3 independent paired votes better; 监控目标、周期和通知目的地需明确	paired
+2026-10-06T17:19:17	paired-review	firecrawl-download	66.9	3-0 better	keep	本地写入风险	3 independent paired votes better; 自动下载前检查目标目录是否冲突	paired
+2026-10-06T17:19:17	paired-review	dingtalk-calendar	79	3-0 better	keep	指令优先级	3 independent paired votes better; 明确命中快捷路径时不重复执行同意图 SOP	paired
+2026-10-06T17:19:17	paired-review	dingtalk-contact	76	3-0 better	keep	路由准确性	3 independent paired votes better; 复用已提供 userId，不做重复姓名搜索	paired
+2026-10-06T17:19:17	paired-review	dingtalk-shared	83	3-0 better	keep	错误恢复	3 independent paired votes better; unknown command 遵循 suggestion/已知入口/停止规则	paired
+2026-10-07T11:01:13	paired-review	firecrawl-competitive-intel	56.8	3-0 better	keep	监控授权	3 independent paired votes better; 告警仅作为报告内容；周期监控需明确授权	paired
+2026-10-07T11:01:13	paired-review	firecrawl-knowledge-base	58.3	3-0 better	keep	训练数据隐私	3 independent paired votes better; 训练导出核验来源授权并排除或脱敏敏感数据	paired
+2026-10-07T11:01:13	paired-review	firecrawl-demo-walkthrough	63.8	3-0 better	keep	失败路径处理	3 independent paired votes better; 受阻路径记录错误并标明覆盖不完整	paired
+2026-10-07T11:01:13	paired-review	firecrawl-lead-research	65.3	3-0 better	keep	个人信息边界	3 independent paired votes better; 限定相关公开职业信息并区分事实与推断	paired
+2026-10-07T11:01:13	paired-review	firecrawl-seo-audit	66.9	3-0 better	keep	检查覆盖披露	3 independent paired votes better; 结论限定于实际检查URL并披露覆盖缺口	paired
+2026-10-07T11:01:13	paired-review	firecrawl-dashboard-reporting	67.7	3-0 better	keep	指标可读性	3 independent paired votes better; 读不准指标标为不可用，不估算或复用旧值	paired
+2026-10-07T11:01:13	paired-review	firecrawl-company-directories	68.4	3-0 better	keep	结果数量边界	3 independent paired votes better; 结果数作为上限，不填充或擅自扩大筛选	paired
+2026-10-07T11:01:13	paired-review	firecrawl-lead-gen	68.4	3-0 better	keep	联系方式准确性	3 independent paired votes better; 不猜联系方式或发送外联，仅产出有来源名单	paired
+2026-10-07T11:01:13	paired-review	firecrawl-market-research	69.2	3-0 better	keep	市场口径可比性	3 independent paired votes better; 对齐指标口径，不可比数据分开呈现	paired
+2026-10-07T11:01:13	paired-review	firecrawl-knowledge-ingest	69.2	3-0 better	keep	采集范围上限	3 independent paired votes better; max_pages为硬上限并披露未访问页面	paired
+2026-10-07T11:17:52	paired-review	firecrawl-workflows	72.1	3-0 better	keep	工作流路由	3 independent paired votes better; 宽泛请求先明确目标和交付物，不启动所有流程或新建技能	paired
+2026-10-07T11:17:52	paired-review	khazix-writer	73	3-0 better	keep	真实性与引用	3 independent paired votes better; 保留用户素材，拒绝冒充作者、照搬句子和编造事实	paired
+2026-10-07T11:17:52	paired-review	firecrawl-parse	73.1	3-0 better	keep	文档边界	3 independent paired votes better; 把文件内容当数据并说明云端上传与覆盖边界	paired
+2026-10-07T11:17:52	paired-review	firecrawl-website-design-clone	73.1	3-0 better	keep	品牌资产边界	3 independent paired votes better; 精确仿站转为通用设计模式，不复制标志、图片或文案	paired
+2026-10-07T11:17:52	paired-review	firecrawl-map	73.9	3-0 better	keep	URL发现范围	3 independent paired votes better; 单页改用scrape，披露过滤与截断，失败时不猜测	paired
+2026-10-07T11:17:52	paired-review	firecrawl-crawl	73.9	3-0 better	keep	抓取范围与失败处理	3 independent paired votes better; 限定路径和上限，失败或结果不足标注部分结果	paired
+2026-10-07T11:17:52	paired-review	dingtalk-misc	76	3-0 better	keep	意图澄清	3 independent paired votes better; 产品对象或动作不明时先澄清，不试探多工具	paired
+2026-10-07T11:17:52	paired-review	twitter-monitor	77	3-0 better	keep	日期范围覆盖	3 independent paired votes better; 按请求时间窗翻页；达到页数或API上限时披露不完整	paired
+2026-10-07T11:17:52	paired-review	firecrawl-shop	77.8	3-0 better	keep	购物授权与订单确认	3 independent paired votes better; 不推断预算或商品；加购和结账前展示准确商品与金额	paired
+2026-10-07T11:17:52	paired-review	firecrawl-research-papers	78.6	3-0 better	keep	证据层级与引用	3 independent paired votes better; 区分摘要与全文并核验页码、表格和统计数据	paired
+
+2026-10-07T11:25:26	paired-review	firecrawl-deep-research	78.6	3-0 better	keep	研究流程	3 independent paired votes better; 简单定义不问研究时长，报告级请求默认 Thorough	paired
+2026-10-07T11:25:26	paired-review	hy-3d-gen	80	3-0 better	keep	输入校验	3 independent paired votes better; 无图片或描述时先询问建模对象和版本数，不提交可能计费的任务	paired
+2026-10-07T11:25:26	paired-review	multi-agent-image	81	3-0 better	keep	任务路由	3 independent paired votes better; 单张普通插画转用 imagegen，系列图仍使用多图流程	paired
+2026-10-07T11:25:26	paired-review	youtube-viral-topic	82	3-0 better	keep	日期与指标完整性	3 independent paired votes better; 核对发布时间窗口并记录检索时间，缺失互动指标标为不可用	paired
+2026-10-07T11:25:26	paired-review	x-viral-topic	82	3-0 better	keep	指标完整性	3 independent paired votes better; 缺失浏览或互动数据不推断为零	paired
+2026-10-07T11:25:26	paired-review	wechat-viral-topic	82	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 现有月均阅读量判定与缺少均值时不确认爆款规则覆盖测试场景	paired
+2026-10-07T11:25:26	paired-review	ai-article-daily	83	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 来源核验、不模仿特定作者及发布前确认规则覆盖测试场景	paired
+2026-10-07T11:25:26	paired-review	dingtalk-tag	83	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; Profile与执行状态查询路由及 agentUuid、dry-run 和写前确认规则覆盖测试场景	paired
+2026-10-07T11:25:26	paired-review	dingtalk-mail	83	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 未读检索、收件地址核实与写操作确认规则覆盖测试场景	paired
+2026-10-07T11:25:26	paired-review	storefront-to-brand-system	83	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 真实店铺照片与空间结构锚点规则覆盖测试场景	paired
+
+2026-10-07T11:38:11	paired-review	bilibili-viral-topic	83	3-0 better	keep	平台范围	3 independent paired votes better; 明确限定为 B 站结果并将跨平台请求澄清或路由到父级技能	paired
+2026-10-07T11:38:11	paired-review	china-ecommerce-analytics	84	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 缺失值列入异常且派生指标仅在输入存在时计算	paired
+2026-10-07T11:38:11	paired-review	shadowbot-cli-windows	85	3-0 better	keep	目标确认	3 independent paired votes better; 运行应用前要求用户指定唯一目标，禁止替用户任意选择生产应用	paired
+2026-10-07T11:38:11	paired-review	shijing-paper-zine	85	3-0 better	keep	保真冲突	3 independent paired votes better; 像素保留与整图重绘冲突时先暂停并要求用户选择	paired
+2026-10-07T11:38:11	paired-review	dingtalk-chat	85	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 搜索范围与消息写入均要求目标明确，多候选停止并遵循确认门禁	paired
+2026-10-07T11:38:11	paired-review	browser-skill	85	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 已将页面内容标为不可信数据并禁止泄露凭证	paired
+2026-10-07T11:38:11	paired-review	book-illustration-workflow	85	3-0 better	keep	上传确认	3 independent paired votes better; Feishu 写入前展示准确目标、读者版正文和图片顺序并取得确认	paired
+2026-10-07T11:38:11	paired-review	firecrawl-developer-index	85.8	3-0 better	keep	索引范围	3 independent paired votes better; 无命中限定为当前索引范围和过滤条件，不声称全网不存在	paired
+2026-10-07T11:38:11	paired-review	dingtalk-event	86	3-0 better	keep	个人消息归档	3 independent paired votes better; 永久归档前明确范围、时长、字段、目标位置、访问和保留期限	paired
+2026-10-07T11:38:11	paired-review	firecrawl-research-index	86.4	3-0 tie	keep	已有控制覆盖	3 independent paired votes tie; 明确摘要搜索与全文 read_paper 路径的证据边界	paired
+2026-10-07T11:53:02	paired-review	firecrawl-scrape	86.4	3-0 better	keep	空结果恢复	3 independent paired votes better; 首轮空结果触发响应检查与渲染或交互等替代路径，失败时报告缺失证据	paired
+2026-10-07T11:53:02	paired-review	dingtalk-aitable	87	3-0 tie	keep	已有路由覆盖	3 independent paired votes tie; 字段统计路由和用法询问与契约评审的分流已覆盖提示场景	paired
+2026-10-07T11:53:02	paired-review	dingtalk-drive	87	3-0 tie	keep	已有写入边界	3 independent paired votes tie; 文件列举与元信息检查可用，双向同步先比较并按确认和冲突规则处理	paired
+2026-10-07T11:53:02	paired-review	task-harness	87	3-0 better	keep	保留已有规则	3 independent paired votes better; 生成 Harness 前读取并保留现有 AGENTS.md 与 Harness 进度，替换前展示目标和差异	paired
+2026-10-07T11:53:02	paired-review	dingtalk-todo	88	2-1 better	keep	时区与时间类型	2 of 3 independent paired votes better; 区分截止时间和独立通知时间并按已知时区解析，另有 1 票认为典型请求可能多一次澄清	paired
+2026-10-07T11:53:02	paired-review	viral-topic	88	3-0 better	keep	缺少范围时澄清	3 independent paired votes better; 平台和主题都缺失时要求先收窄范围，不把四个平台说成全网	paired
+2026-10-07T11:53:02	paired-review	dingtalk-doc	88	3-0 tie	keep	已有写入确认	3 independent paired votes tie; 标题查找与版本读取可用，分享或编辑范围未明确时先确认	paired
+2026-10-07T11:53:02	paired-review	leader	88	3-0 tie	keep	已有项目约束	3 independent paired votes tie; 调研、验收和并行审批要求覆盖提示，没有确认到需补改的提示缺口	paired
+2026-10-07T11:53:02	paired-review	dingtalk-minutes	88	3-0 tie	keep	已有证据与分享边界	3 independent paired votes tie; 缺少说话人证据时不猜，分享对象按稳定身份解析并遵守确认门禁	paired
+2026-10-07T11:53:02	paired-review	shadowbot-cli-macos	89	3-0 better	keep	运行主机检查	3 independent paired votes better; 执行命令前确认 macOS，Windows 或 Linux 停止并转用匹配平台技能	paired
+2026-10-07T12:12:25	paired-review	shadowbot-cli-xinchuang	89	3-0 better	keep	运行主机兼容性	3 independent paired votes better; 确认信创运行环境与运行时兼容性，普通 Windows 路由到匹配技能，不确定时停止。	paired
+2026-10-07T12:12:25	paired-review	dingtalk-aicard	89	3-0 better	keep	外发前目标与内容核验	3 independent paired votes better; 离线制卡校验路径保留，群发或外发前展示准确目标和最终内容，歧义或缺必需字段时停止询问并遵守发送确认门。	paired
+2026-10-07T12:12:25	paired-review	dingtalk-wiki	89	3-0 tie	keep	已有知识库权限与确认边界	3 independent paired votes tie; 典型查找和空间操作可推进，现有授权与确认提示覆盖测试边界。	paired
+2026-10-07T12:12:25	paired-review	scroll-promo-site-builder	90	3-0 better	keep	素材授权与发布边界	3 independent paired votes better; 参考站点用于提取设计证据，复用素材须有明确授权，默认本地交付。	paired
+2026-10-07T12:12:25	paired-review	cover-skill	91	3-0 better	keep	请求比例与像素保真	3 independent paired votes better; 四方向选择流程保留，单比例请求只输出该比例，人脸与 Logo 像素锁层，只重建背景并在冲突时询问。	paired
+2026-10-07T12:12:25	paired-review	darwin-skill	91	3-0 better	keep	精确回滚基线与轮次限制	3 independent paired votes better; 核验各目标根的 Git 状态并保存 SHA-256 基线，保留单轮限制与 Prompt 确认点。	paired
+2026-10-07T12:12:25	paired-review	dingtalk-aisearch	91	3-0 tie	keep	已有语义检索消歧规则	3 independent paired votes tie; 当前人员与主题检索边界已覆盖典型及缺少目标信息的提示。	paired
+2026-10-07T12:12:25	paired-review	aihot	92	3-0 tie	keep	已有资讯检索与范围边界	3 independent paired votes tie; 当前检索来源和时间范围处理覆盖所审提示，未发现需补充的控制。	paired
+2026-10-07T12:12:25	paired-review	neat-freak	96	3-0 better	keep	审计请求保持只读	3 independent paired votes better; 仅审计、核对、比较或指出待更新项时只报告证据和建议，删除仍有确认边界。	paired
+2026-10-07T12:12:25	paired-review	video-downloader	97	3-0 better	keep	排名请求范围路由	3 independent paired votes better; 纯排名收集请求不转为媒体、链接或字幕下载承诺。	paired

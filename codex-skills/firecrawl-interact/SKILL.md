@@ -11,6 +11,10 @@ allowed-tools:
 
 Interact with scraped pages in a live browser session. Scrape a page first, then use natural language prompts or code to click, fill forms, navigate, and extract data. For web searches, use `search` — interact is for acting on a specific page.
 
+## Action Boundary
+
+Default to reading and navigation. Before submitting a form, changing account or site settings, sending a message, purchasing, or otherwise changing external state, verify that the user explicitly requested that specific action and its target. If scope or consequences are unclear, stop before the action and ask; do not infer consent from a general request to inspect or test a page.
+
 ## Quick start
 
 ```bash

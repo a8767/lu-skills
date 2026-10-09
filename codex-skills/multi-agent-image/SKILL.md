@@ -39,6 +39,7 @@ Use this skill when the user wants one or more of the following:
 
 Do not use this skill for:
 
+- A single simple one-off illustration; use `imagegen` instead.
 - pixel-accurate UI recreation
 - editable charts
 - exact typography output inside the image

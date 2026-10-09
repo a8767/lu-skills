@@ -69,4 +69,5 @@ Read `references/scoring.md` before changing thresholds or combining YouTube res
 - Treat `subscriberCount` as public rounded/abbreviated subscriber data, useful only as context.
 - If `hiddenSubscriberCount` is true or subscriber count is missing, keep the video eligible as long as it passes the viral filters.
 - Prefer API collection over browser scraping. Browser sessions should only be used when the user explicitly asks.
+- Check `published_at` against the requested time window and include the retrieval time. If views or engagement metrics are missing, mark them unavailable and exclude them from any threshold or ranking that needs those values; do not treat missing as zero.
 - Use videos as topic signals, structure references, and hook references. Do not copy scripts or captions wholesale.

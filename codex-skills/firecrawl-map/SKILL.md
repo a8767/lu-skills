@@ -11,6 +11,10 @@ allowed-tools:
 
 Discover URLs on a site. Use `--search` to find a specific page within a large site.
 
+## Scope And Result Boundaries
+
+Use map only when URLs must be discovered; for one known page, use `scrape`. Keep discovery within the supplied site and requested path or subdomain scope. Treat `--limit` as a maximum; report the active filters and limit, and describe empty or truncated results without claiming unlisted URLs do not exist or inventing URLs. If authentication is missing or mapping fails, report the error and stop.
+
 **Prerequisite:** `map` requires authentication (no keyless free tier); without credentials the CLI prompts an interactive login.
 
 ## Quick start

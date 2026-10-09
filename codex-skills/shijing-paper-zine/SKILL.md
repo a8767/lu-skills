@@ -15,10 +15,10 @@ If the user supplies several photographs, treat them as a series only when they 
 
 ## Preset style references
 
-- Inspect [example-landscape.png](assets/example-landscape.jpg) to calibrate paper whitespace and photographic share in open scenes.
-- Inspect [example-urban.png](assets/example-urban.jpg) to calibrate urban structure, eye direction, and structural color.
-- Inspect [example-humanity.png](assets/example-humanity.jpg) to calibrate the preserved relationship between people and their environment.
-- Inspect [example-cover.png](assets/example-cover.jpg) to calibrate fragment hierarchy and consistency for a multi-image cover.
+- Inspect [example-landscape.png](assets/example-landscape.png) to calibrate paper whitespace and photographic share in open scenes.
+- Inspect [example-urban.png](assets/example-urban.png) to calibrate urban structure, eye direction, and structural color.
+- Inspect [example-humanity.png](assets/example-humanity.png) to calibrate the preserved relationship between people and their environment.
+- Inspect [example-cover.png](assets/example-cover.png) to calibrate fragment hierarchy and consistency for a multi-image cover.
 - Treat these files as visual-language references only. Do not copy their landmarks, people, layouts, wording, or travel subject matter into a new result.
 - Derive every new composition from the user's source photograph and Scene Note. The examples must not narrow this style to travel images.
 
@@ -42,6 +42,10 @@ Use only when the user accepts reinterpretation or the scene has no identity-cri
 - Prefer back views, distant figures, landscapes, and architecture without critical signage.
 
 Default to pixel-preserving mode when the request is ambiguous and the available canvas supports direct compositing.
+
+### Resolve conflicting fidelity constraints
+
+If the request requires both pixel-for-pixel preservation and a full-image redraw or reconstruction, pause before generation and ask the user to choose. Pixel-preserving composition keeps the source photo intact; generative reconstruction can change its pixels and details. A style request alone does not authorize that change.
 
 ## Build a Scene Note
 

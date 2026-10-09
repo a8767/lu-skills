@@ -1,31 +1,33 @@
-# ===== 密钥/凭据：含真实 API Key，绝不纳入版本控制 =====
-tavily-search__skillhub/config.json
+# Credentials and local configuration
+**/tavily-search__skillhub/config.json
 **/config.local.json
-.env
+**/.env
+**/.env.*
+**/env.example
 *.key
 
-# ===== Python =====
+# Python and Node artifacts
 __pycache__/
 *.pyc
 .venv/
 venv/
-
-# ===== Node =====
 node_modules/
 
-# ===== 系统垃圾 =====
+# OS and WorkBuddy runtime data
 .DS_Store
 Thumbs.db
-
-# ===== Agent 运行时数据：每次运行都会变动，不纳入版本控制（仍会打进备份包） =====
 .workbuddy/
 
-# ===== 调试产物：商家后台截图 / DOM 快照，含真实经营数据，且体积大（13MB+），不纳入版本控制 =====
-laiketui-data-reader/out/
-laiketui-data-reader/tools/*.png
-laiketui-data-reader/tools/*.html
-# 代运营月度报表导出（含真实商家名称/GMV/佣金等经营数据，按月份生成，不入库）
-laiketui-data-reader/代运营_*.csv
-laiketui-data-reader/代运营_*.json
-# 林客 API 直连管线运行时同步日志（每次运行追加时间戳，非技能正文，不入库）
-laiketui-data-reader/tools/_pipeline_sync.log
+# Private local Codex material
+codex-skills/**/*.jsonl
+codex-skills/**/.last-update-check
+codex-skills/**/*.bak.*
+codex-skills/gpt-image-2-style-library/assets/city-life-system-map.png
+
+# Laiketui merchant data and generated captures
+workbuddy-skills/laiketui-data-reader/out/
+workbuddy-skills/laiketui-data-reader/tools/*.png
+workbuddy-skills/laiketui-data-reader/tools/*.html
+workbuddy-skills/laiketui-data-reader/运营月*.csv
+workbuddy-skills/laiketui-data-reader/运营月*.json
+workbuddy-skills/laiketui-data-reader/tools/_pipeline_sync.log

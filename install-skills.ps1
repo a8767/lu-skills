@@ -32,7 +32,8 @@ if ($Archive -ne "") {
   $src = Join-Path $tmp "skills"
   if (-not (Test-Path $src)) { Err "备份包内未找到 skills/"; exit 1 }
 } else {
-  $src = Split-Path -Parent $MyInvocation.MyCommand.Definition
+  $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$src = Join-Path $repoRoot "workbuddy-skills"
 }
 
 $target = Join-Path $env:USERPROFILE ".workbuddy\skills"

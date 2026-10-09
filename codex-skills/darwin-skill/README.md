@@ -6,6 +6,12 @@
 
 ![达尔文.skill](assets/banner.svg)
 
+<p align="center">
+  <img src="assets/hero.gif" alt="Darwin Skill Animation" />
+  <br/>
+  <sub>动画由 <a href="https://github.com/alchaincyf/huashu-design">huashu-design</a> skill 制作</sub>
+</p>
+
 <div align="center">
 
 # 达尔文.skill 2.0

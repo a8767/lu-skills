@@ -38,6 +38,8 @@ If the user gives no platform, default to the implemented set: WeChat, X, Bilibi
 
 ## Workflow
 
+If the user gives neither a topic/niche nor a platform (for example, “全网最近最火”), ask for the missing topic and explain that this skill covers only its four implemented platforms, not the whole web. Do not start an unbounded search or present the available set as exhaustive internet coverage.
+
 1. Normalize the user's niche into 3-8 focused search terms.
 2. Choose platforms from the request. For "全平台" or "各个平台", run all implemented child skills.
 3. Run each platform skill independently with its own defaults:

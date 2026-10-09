@@ -28,17 +28,18 @@ Only set `BILIBILI_COOKIE` if public requests are repeatedly rate-limited. Never
 ## Workflow
 
 1. Convert the user's niche into focused Chinese and product-name keywords.
-2. Search B站 videos through `x/web-interface/search/type` with `order=pubdate` and `order=click`.
-3. Optionally supplement with `x/web-interface/ranking/v2` when the user asks for broader platform signals.
-4. Deduplicate by `bvid`.
-5. Filter to the requested recent window using `pubdate`.
-6. Enrich each unique `mid` through `x/relation/stat?vmid=<mid>` and cache follower counts.
-7. Filter:
+2. Keep the platform scope explicit: this collector returns Bilibili results only. If the user asks for all platforms or says “全网” without naming Bilibili, ask which platform they want or route a genuinely cross-platform request through the parent `viral-topic` skill. Never present Bilibili results as a whole-web ranking.
+3. Search B站 videos through `x/web-interface/search/type` with `order=pubdate` and `order=click`.
+4. Optionally supplement with `x/web-interface/ranking/v2` when the user asks for broader platform signals.
+5. Deduplicate by `bvid`.
+6. Filter to the requested recent window using `pubdate`.
+7. Enrich each unique `mid` through `x/relation/stat?vmid=<mid>` and cache follower counts.
+8. Filter:
    - `follower_count <= --max-followers`
    - `view_count >= --min-play`
    - `view_count / follower_count >= --min-play-follower-ratio`
-8. Rank by `breakout_score`, then `play_follower_ratio`, then `view_count`.
-9. Return JSON for automation or Markdown for topic review.
+9. Rank by `breakout_score`, then `play_follower_ratio`, then `view_count`.
+10. Return JSON for automation or Markdown for topic review.
 
 ## Output Contract
 

@@ -43,6 +43,8 @@ Capture fields that are visible:
 
 Leave unavailable fields blank. Do not infer.
 
+Treat a requested result count as a maximum, not a quota. Return fewer records when fewer distinct companies meet the filters; do not pad the list or broaden filters without the user's permission.
+
 ## Final Deliverable
 
 ```markdown

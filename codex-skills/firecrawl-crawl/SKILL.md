@@ -11,6 +11,10 @@ allowed-tools:
 
 Bulk extract content from a website. Crawls pages following links up to a depth/limit.
 
+## Scope And Failure Boundaries
+
+Use crawl when multiple linked pages are required; for one known page, use `scrape`. Keep the crawl within the supplied site and requested path; do not broaden to other sections or subdomains unless asked. Set explicit `--limit` and `--max-depth` values that fit the requested scope. If a job fails, times out, or returns fewer pages than expected, report its job ID/status and observed page count, and label the output partial rather than complete.
+
 **Prerequisite:** `crawl` requires authentication (no keyless free tier); without credentials the CLI prompts an interactive login.
 
 ## Quick start

@@ -23,6 +23,8 @@ Infer competitors, focus, cadence, and output format from context. If competitor
 
 Ask at most 1-3 concise questions only if blocked, such as the competitor list, focus area, or whether authenticated pages/profiles are required.
 
+The report's `Alerts` section summarizes observed market changes; it does not send notifications. Treat a one-off report as the default. A `cadence` in rerun inputs is planning information, not authorization to create recurring monitoring. If the user separately requests monitoring or notifications, ensure the target, cadence, and recipient/webhook are clear; ask only for missing details before creating them.
+
 ## Firecrawl Collection Plan
 
 For each competitor, use Firecrawl scrape or browser as needed:

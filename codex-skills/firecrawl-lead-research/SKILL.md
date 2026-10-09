@@ -32,6 +32,8 @@ Use Firecrawl search and scrape to gather:
 - public person profiles, talks, posts, interviews, and role/background
 - relevant industry context and likely business challenges
 
+For individuals, collect only relevant public professional information. Exclude private contact details, family information, home addresses, and sensitive personal traits; do not infer missing details. Keep sourced facts separate from inferred business pain points.
+
 ## Parallel Work
 
 If appropriate, use sub-agents or equivalent parallel task runners:

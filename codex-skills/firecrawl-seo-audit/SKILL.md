@@ -30,6 +30,8 @@ Ask at most 1-3 concise questions only if blocked, such as the site URL, require
 3. Extract title tags, meta descriptions, headings, internal links, content structure, canonical signals when visible, and image alt text when available.
 4. Search target keywords when provided; scrape top ranking pages for comparison.
 
+Track which URLs were inspected and how much of the site was covered. Scope findings to those URLs unless the crawl provides sufficient coverage for a site-wide claim. If access, sampling, or page limits leave gaps, disclose them; do not infer that uninspected pages have no issues.
+
 ## Parallel Work
 
 If appropriate, use sub-agents or equivalent parallel task runners:

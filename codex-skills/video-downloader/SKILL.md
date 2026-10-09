@@ -21,6 +21,8 @@ video link or local file
 
 Its final handoff is `multimodal_transcript.md`, a normal text file. Cangjie Skill stays unchanged and only consumes text to produce Skills. Do not move download, ASR, frame, OCR, or visual-model logic into Cangjie Skill.
 
+Do not use this workflow for ranking-only requests. If the user wants e-commerce rankings and says video links or downloads are out of scope, route to the ranking workflow; do not acquire media, collect or return video links, or promise captions, transcripts, or visual analysis.
+
 ## Requirements
 
 Required for media work:

@@ -12,6 +12,7 @@ Use this skill as an execution workflow, not as a long-running daemon. First com
 1. Ask for X/Twitter account ids when missing. Accept handles such as `sama`, `@sama`, profile URLs, or multiple comma-separated ids.
 2. Ask the user to provide or configure a `twitterapi.io` API key when `TWITTER_API_KEY` is unavailable. Do not write API keys into files committed to a repository.
 3. Confirm pagination depth. Default to `--pages 1`; use a larger number only when the user asks for more history or accepts higher API usage.
+   For a requested date window, fetch until the oldest returned post reaches its start or the user-approved page cap is reached. If the cap or API limit stops retrieval early, report each account's actual oldest/newest post and mark coverage incomplete; do not equate one page with full date coverage.
 4. Run `scripts/twitter_monitor.py` and generate JSON or CSV output.
 5. If the user wants Feishu/Lark Bitable output, follow `references/feishu-output.md`.
 6. After the one-shot command works, ask whether they want recurring execution. If yes, follow `references/scheduling.md`, including OpenClaw when appropriate.

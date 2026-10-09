@@ -17,6 +17,8 @@ inputs:
 
 Use this to research products and recommend a purchase option. Only add items to a cart when the user explicitly asks and has an authenticated browser profile available.
 
+An open-ended request for “the best” does not authorize cart or checkout actions. Do not infer a missing budget, region, seller, or variant; ask only for details needed to choose unambiguously. Before adding an item, show the exact product, variant, seller, and current price. Before checkout, show the order total including shipping and taxes and wait for explicit approval of that exact order.
+
 ## Onboarding Interview
 
 Infer the product, budget, preferences, sites, and desired stopping point from context. If the product is clear, proceed immediately.

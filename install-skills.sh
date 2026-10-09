@@ -57,7 +57,7 @@ if [ -n "$ARCHIVE" ]; then
   SRC="$TMP/skills"
   [ -d "$SRC" ] || { err "备份包内未找到 skills/ 目录"; exit 1; }
 else
-  SRC="$SCRIPT_DIR"
+  SRC="$SCRIPT_DIR/workbuddy-skills"
 fi
 
 TARGET="${HOME}/.workbuddy/skills"

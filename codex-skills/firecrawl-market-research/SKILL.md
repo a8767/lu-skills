@@ -73,3 +73,4 @@ output: [json/markdown]
 - Note conflicting data across sources.
 - Include period and unit for every metric.
 - Do not provide financial advice.
+- Before comparing figures, align market definition, geography, period, currency, and metric. Keep non-comparable figures separate with their source scope; do not average them into a single “accurate” value.
